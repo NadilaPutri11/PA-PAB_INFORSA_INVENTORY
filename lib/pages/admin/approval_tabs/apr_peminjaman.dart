@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../providers/approval_provider.dart';
+import '../../../providers/dashboard_provider.dart';
 import '../../../models/peminjaman_model.dart';
 
 class AprPeminjamanTab extends StatefulWidget {
@@ -21,81 +22,24 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
   int _currentPage = 1;
   final int _itemsPerPage = 5;
 
-  IconData _getIconFor(String nama) {
-    final n = nama.toLowerCase();
-    if (n.contains('laptop') ||
-        n.contains('macbook') ||
-        n.contains('komputer')) {
-      return Icons.laptop_mac;
-    }
-    if (n.contains('camera') || n.contains('kamera') || n.contains('alpha')) {
-      return Icons.camera_alt_outlined;
-    }
-    if (n.contains('stempel')) {
-      return Icons.approval;
-    }
-    return Icons.inventory_2_outlined;
-  }
-
-  void _showImageDialog(BuildContext context, String imageUrl) {
-    showDialog(
-      context: context,
-      builder: (_) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(16),
-        child: InteractiveViewer(
-          panEnabled: true,
-          minScale: 1.0,
-          maxScale: 4.0,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              fit: BoxFit.contain,
-              errorBuilder: (ctx, err, stack) => Container(
-                color: Colors.white,
-                padding: const EdgeInsets.all(32),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.broken_image_outlined,
-                      size: 64,
-                      color: Colors.grey,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Gagal memuat gambar',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final approval = context.watch<ApprovalProvider>();
 
-    // Menampilkan barang yang sedang dipinjam (Aktif/Disetujui)
-    final activeList = approval.activePeminjaman;
+    // Menampilkan permohonan yang menunggu keputusan admin
+    final pendingList = approval.pendingPeminjaman;
     final fmt = DateFormat('dd MMM yyyy', 'id');
 
     // Kalkulasi Pagination
-    final int totalPages = (activeList.length / _itemsPerPage).ceil();
+    final int totalPages = (pendingList.length / _itemsPerPage).ceil();
     int displayPage = (_currentPage > totalPages && totalPages > 0)
         ? 1
         : _currentPage;
 
     // Memotong data sesuai halaman saat ini
-    final paginatedItems = activeList.isEmpty
+    final paginatedItems = pendingList.isEmpty
         ? <PeminjamanModel>[]
-        : activeList
+      : pendingList
               .skip((displayPage - 1) * _itemsPerPage)
               .take(_itemsPerPage)
               .toList();
@@ -127,12 +71,12 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Berikut adalah daftar peminjaman aset oleh anggota yang sedang berlangsung beserta pantauan tenggat waktunya.',
+            'Berikut adalah daftar permohonan peminjaman yang menunggu persetujuan admin.',
             style: TextStyle(fontSize: 14, color: Colors.black54, height: 1.5),
           ),
           const SizedBox(height: 32),
 
-          if (activeList.isEmpty)
+          if (pendingList.isEmpty)
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(48),
@@ -145,7 +89,7 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Tidak ada aset yang sedang dipinjam',
+                      'Tidak ada permohonan menunggu persetujuan',
                       style: TextStyle(color: Colors.grey[500]),
                     ),
                   ],
@@ -153,7 +97,9 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
               ),
             )
           else
-            ...paginatedItems.map((p) => _buildPeminjamanCard(p, fmt)),
+            ...paginatedItems.map(
+              (p) => _buildPendingPeminjamanCard(context, p, approval, fmt),
+            ),
 
           if (totalPages > 1) ...[
             const SizedBox(height: 24),
@@ -219,33 +165,74 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
     );
   }
 
-  Widget _buildPeminjamanCard(PeminjamanModel p, DateFormat fmt) {
+  IconData _getIconFor(String nama) {
+    final n = nama.toLowerCase();
+    if (n.contains('laptop') || n.contains('macbook') || n.contains('komputer')) {
+      return Icons.laptop_mac;
+    }
+    if (n.contains('camera') || n.contains('kamera') || n.contains('alpha')) {
+      return Icons.camera_alt_outlined;
+    }
+    if (n.contains('stempel')) {
+      return Icons.approval;
+    }
+    return Icons.inventory_2_outlined;
+  }
+
+  void _showImageDialog(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: InteractiveViewer(
+          panEnabled: true,
+          minScale: 1.0,
+          maxScale: 4.0,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.contain,
+              errorBuilder: (ctx, err, stack) => Container(
+                color: Colors.white,
+                padding: const EdgeInsets.all(32),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.broken_image_outlined,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Gagal memuat gambar',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPendingPeminjamanCard(
+    BuildContext context,
+    PeminjamanModel p,
+    ApprovalProvider approval,
+    DateFormat fmt,
+  ) {
     final durasi = p.rencanakembali.difference(p.tanggalPinjam).inDays;
     final displayDurasi = durasi <= 0 ? 1 : durasi;
 
-    // LOGIKA STATUS: BERLANGSUNG ATAU JATUH TEMPO
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final returnDate = DateTime(
-      p.rencanakembali.year,
-      p.rencanakembali.month,
-      p.rencanakembali.day,
-    );
-
-    final isOverdue = today.isAfter(returnDate);
-    final statusText = isOverdue ? 'JATUH TEMPO' : 'BERLANGSUNG';
-    final statusTextColor = isOverdue
-        ? const Color(0xFFEF4444)
-        : const Color(0xFF10B981); // Merah atau Hijau
-    final statusBgColor = isOverdue
-        ? const Color(0xFFFEF2F2)
-        : const Color(0xFFF0FDF4); // Latar Merah Pudar atau Hijau Pudar
-
     // Memecah URL gabungan jika ada koma (karena 2 foto disatukan)
-    List<String> imageUrls = [];
-    if (p.fotoSebelumPinjamUrl != null && p.fotoSebelumPinjamUrl!.isNotEmpty) {
-      imageUrls = p.fotoSebelumPinjamUrl!.split(',');
-    }
+    final imageUrls = p.fotoSebelumPinjamUrl?.isNotEmpty == true
+        ? p.fotoSebelumPinjamUrl!.split(',')
+        : <String>[];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -289,7 +276,7 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'BORROWED BY',
+                          'PERMOHONAN DARI',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w900,
@@ -304,13 +291,13 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: statusBgColor,
+                            color: const Color(0xFFFEF3C7),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            statusText,
-                            style: TextStyle(
-                              color: statusTextColor,
+                            'MENUNGGU',
+                            style: const TextStyle(
+                              color: Color(0xFFD97706),
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
@@ -356,6 +343,26 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
               Expanded(
                 child: Text(
                   '${fmt.format(p.tanggalPinjam)} — ${fmt.format(p.rencanakembali)}\n($displayDurasi Hari)',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.phone_android_outlined, size: 16, color: Colors.black54),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  p.noWhatsappUser ?? '-',
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -420,7 +427,109 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
             'Tap foto untuk memperbesar',
             style: TextStyle(fontSize: 11, color: Colors.grey),
           ),
-          // Tombol Konfirmasi telah dihapus dari sini.
+          const SizedBox(height: 24),
+
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: approval.isLoading
+                      ? null
+                      : () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text('Tolak Peminjaman'),
+                              content: Text('Tolak permohonan dari ${p.namaUser ?? '-'}?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Batal'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                  child: const Text('Tolak', style: TextStyle(color: Colors.white)),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm != true || !context.mounted) return;
+                          final success = await approval.updateStatusPeminjaman(
+                            p.id,
+                            'ditolak',
+                            p.barangId,
+                          );
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(success ? 'Peminjaman ditolak' : 'Gagal menolak peminjaman'),
+                              backgroundColor: success ? Colors.orange : Colors.red,
+                            ),
+                          );
+                          if (success) {
+                            await widget.onRefresh();
+                            if (context.mounted) {
+                              await context.read<DashboardProvider>().fetchDashboardData(silent: true);
+                            }
+                          }
+                        },
+                  child: const Text('Tolak'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: approval.isLoading
+                      ? null
+                      : () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text('Setujui Peminjaman'),
+                              content: Text('Setujui permohonan dari ${p.namaUser ?? '-'}?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Batal'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF114376)),
+                                  child: const Text('Setujui', style: TextStyle(color: Colors.white)),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm != true || !context.mounted) return;
+                          final success = await approval.updateStatusPeminjaman(
+                            p.id,
+                            'disetujui',
+                            p.barangId,
+                          );
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(success ? 'Peminjaman disetujui' : 'Gagal menyetujui peminjaman'),
+                              backgroundColor: success ? Colors.green : Colors.red,
+                            ),
+                          );
+                          if (success) {
+                            await widget.onRefresh();
+                            if (context.mounted) {
+                              await context.read<DashboardProvider>().fetchDashboardData(silent: true);
+                            }
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF114376),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Setujui'),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

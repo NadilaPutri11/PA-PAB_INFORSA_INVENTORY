@@ -32,6 +32,7 @@ class _AddItemPageState extends State<AddItemPage> {
   String _satuan = 'Pcs';
   String _kondisi = 'Baik';
   bool _isUploading = false;
+  bool _isNavigatingBack = false;
 
   static const List<String> _satuanOptions = [
     'Pcs',
@@ -107,6 +108,30 @@ class _AddItemPageState extends State<AddItemPage> {
         _tanggalController.text = DateFormat('dd/MM/yyyy').format(picked);
       });
     }
+  }
+
+  // ── Reset Form ────────────────────────────────────────────────────────────
+  void _resetForm() {
+    _formKey.currentState?.reset();
+    setState(() {
+      _kodeBarangController.clear();
+      _namaBarangController.clear();
+      _volumeController.clear();
+      _spesifikasiController.clear();
+      _tahunController.clear();
+      _hargaController.clear();
+      _keteranganController.clear();
+      _tanggalPembukuan = DateTime.now();
+      _tanggalController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+      _asalBarang = 'Beli';
+      _satuan = 'Pcs';
+      _kondisi = 'Baik';
+      _fotoBytes = null;
+      _fotoEkstension = null;
+      _dokumenBytes = null;
+      _dokumenNama = null;
+      _dokumenEkstension = null;
+    });
   }
 
   Future<void> _handleSimpan() async {
@@ -191,16 +216,43 @@ class _AddItemPageState extends State<AddItemPage> {
       fotoUrl: fotoUrl,
     );
 
-
     final success = await provider.addItem(item);
     if (!mounted) return;
     setState(() => _isUploading = false);
 
     if (success) {
-      _showSnackBar('Barang berhasil ditambahkan!');
-      Navigator.pop(context, true);
+      if (mounted) {
+        _showSnackBar('Barang berhasil ditambahkan!');
+        // Reset form setelah berhasil menambah barang
+        _resetForm();
+      }
     } else {
-      _showSnackBar('Gagal menambahkan barang', isError: true);
+      if (mounted) {
+        _showSnackBar(
+          provider.errorMessage ?? 'Gagal menambahkan barang',
+          isError: true,
+        );
+      }
+    }
+  }
+
+  Future<void> _navigateBackToMain({int? navbarIndex}) async {
+    if (_isNavigatingBack) return;
+    _isNavigatingBack = true;
+
+    try {
+      if (!mounted) return;
+      final nav = Navigator.of(context);
+
+      if (nav.canPop()) {
+        await nav.maybePop(navbarIndex);
+      }
+    } catch (e) {
+      debugPrint('AddItemPage back navigation error: $e');
+    } finally {
+      if (mounted) {
+        _isNavigatingBack = false;
+      }
     }
   }
 
@@ -227,7 +279,7 @@ class _AddItemPageState extends State<AddItemPage> {
         backgroundColor: navyColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => _navigateBackToMain(),
         ),
         title: const Text(
           'Tambah Barang',
@@ -462,7 +514,9 @@ class _AddItemPageState extends State<AddItemPage> {
                   decoration: BoxDecoration(
                     color: Colors.blue.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -558,6 +612,34 @@ class _AddItemPageState extends State<AddItemPage> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: 2,
+        selectedItemColor: navyColor,
+        unselectedItemColor: Colors.grey,
+        onTap: (navbarIndex) {
+          if (navbarIndex == 2) return;
+          _navigateBackToMain(navbarIndex: navbarIndex);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.grid_view_rounded),
+            label: 'DASHBOARD',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.inventory_2_outlined),
+            label: 'INVENTORY',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline, size: 32),
+            label: 'ADD',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fact_check_outlined),
+            label: 'APPROVALS',
+          ),
+        ],
       ),
     );
   }

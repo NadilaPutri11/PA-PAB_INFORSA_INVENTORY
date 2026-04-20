@@ -22,13 +22,16 @@ class PerpanjanganModel {
   });
 
   factory PerpanjanganModel.fromMap(Map<String, dynamic> map) {
+    final tanggalRaw =
+        map['tanggal_jatuh_tempo_baru'] ?? map['rencana_kembali_baru'];
+
     return PerpanjanganModel(
       id: map['id'] ?? '',
       // FIX: Rename peminjamamId → peminjamanId
       peminjamanId: map['peminjaman_id'] ?? '',
       // FIX: Tambah null safety untuk tanggalJatuhTempoBaru
-      tanggalJatuhTempoBaru: map['tanggal_jatuh_tempo_baru'] != null
-          ? DateTime.parse(map['tanggal_jatuh_tempo_baru'])
+      tanggalJatuhTempoBaru: tanggalRaw != null
+          ? DateTime.parse(tanggalRaw.toString())
           : DateTime.now(),
       alasanPerpanjangan: map['alasan_perpanjangan'],
       // FIX: Parse status dari database

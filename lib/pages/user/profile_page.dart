@@ -3,10 +3,61 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/inforsa_header.dart';
+import '../../widgets/user_navbar.dart';
 import '../auth/login_page.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Refresh data user saat profile page dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = context.read<AuthProvider>();
+      authProvider.refreshProfile();
+    });
+  }
+
+  bool _isPlaceholderProfile(dynamic user) {
+    if (user == null) return true;
+    final nama = (user.nama ?? '').trim().toLowerCase();
+    final departemen = (user.departemen ?? '').trim();
+    final nim = (user.nim ?? '').trim();
+    final noWhatsapp = (user.noWhatsapp ?? '').trim();
+
+    final isNamaPlaceholder =
+        nama.isEmpty || nama == 'user baru' || nama == 'guest user';
+    final isDepartemenPlaceholder = departemen.isEmpty || departemen == '-';
+
+    return isNamaPlaceholder ||
+        isDepartemenPlaceholder ||
+        nim.isEmpty ||
+        noWhatsapp.isEmpty;
+  }
+
+  String _initialsFromName(String? fullName) {
+    final source = (fullName ?? '').trim();
+    if (source.isEmpty) return 'U';
+
+    final parts = source
+        .split(RegExp(r'\s+'))
+        .where((e) => e.trim().isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) {
+      return parts.first.substring(0, 1).toUpperCase();
+    }
+
+    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+        .toUpperCase();
+  }
 
   // FUNGSI BARU: Langsung membuka link WA spesifik yang Anda minta [Terupdate]
   Future<void> _openWhatsAppLink() async {
@@ -81,6 +132,9 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
+    
+    // Cek apakah halaman ini di-push standalone atau bagian dari MainUserPage
+    final isStandalone = Navigator.of(context).canPop();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -93,39 +147,18 @@ class ProfilePage extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      CircleAvatar(
-                        radius: 55,
-                        backgroundColor: Colors.grey[300],
-                        backgroundImage: user?.avatarUrl != null
-                            ? NetworkImage(user!.avatarUrl!)
-                            : null,
-                        child: user?.avatarUrl == null
-                            ? const Icon(
-                                Icons.person,
-                                size: 60,
-                                color: Colors.white,
-                              )
-                            : null,
+                  CircleAvatar(
+                    radius: 55,
+                    backgroundColor: const Color(0xFFE5E7EB),
+                    child: Text(
+                      _initialsFromName(user?.nama),
+                      style: const TextStyle(
+                        color: Color(0xFF000080),
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
                       ),
-                      GestureDetector(
-                        onTap: () => _showEditProfileDialog(context, auth),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF000080),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -139,20 +172,65 @@ class ProfilePage extends StatelessWidget {
                     user?.departemen ?? 'Unit Tidak Diketahui',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 36,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final authProvider = context.read<AuthProvider>();
+                        authProvider.refreshProfile();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Data profil diperbarui'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: const Text('Sinkronisasi Data'),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFF000080)),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 32),
 
-            const Text(
-              "Biodata",
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "BIODATA DIRI",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1F35),
+                    letterSpacing: 1.2,
+                    fontSize: 12,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => _showEditProfileDialog(context, auth),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: const Text(
+                    'Edit',
+                    style: TextStyle(
+                      color: Color(0xFF000080),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            _buildProfileItem("NAMA LENGKAP", user?.nama ?? "-"),
-            _buildProfileItem("NIM", user?.nim ?? "-"),
-            _buildProfileItem("DEPARTEMEN", user?.departemen ?? "-"),
-            _buildProfileItem("NO. WHATSAPP", user?.noWhatsapp ?? "-"),
+            const SizedBox(height: 16),
+            _buildProfileInfo(user, auth.currentEmail),
 
             const SizedBox(height: 12),
 
@@ -251,35 +329,81 @@ class ProfilePage extends StatelessWidget {
           ],
         ),
       ),
+      bottomNavigationBar: isStandalone ? const UserNavbar(selectedIndex: 3, onItemTapped: _naviateToPage) : null,
     );
+  }
+
+  static void _naviateToPage(int index) {
+    // Ini callback untuk navbar standalone
   }
 
   // --- BAGIAN DIALOG (TETAP SAMA) ---
 
-  Widget _buildProfileItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildProfileInfo(dynamic user, String? email) {
+    return Column(
+      children: [
+        _buildInfoItem('NAMA LENGKAP', user?.nama ?? '-', Icons.person_outline),
+        _buildInfoItem('NIM / ID', user?.nim ?? '-', Icons.badge_outlined),
+        _buildInfoItem(
+          'DEPARTEMEN',
+          user?.departemen ?? '-',
+          Icons.business_outlined,
+        ),
+        _buildInfoItem(
+          'NOMOR WHATSAPP',
+          user?.noWhatsapp ?? '-',
+          Icons.phone_android_outlined,
+        ),
+        _buildInfoItem('EMAIL', email ?? '-', Icons.email_outlined),
+      ],
+    );
+  }
+
+  Widget _buildInfoItem(String label, String value, IconData icon) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+      ),
+      child: Row(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.grey,
-              fontWeight: FontWeight.bold,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF000080).withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: const Color(0xFF000080), size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[500],
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1F35),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-          ),
-          const Divider(height: 24),
         ],
       ),
     );
@@ -287,9 +411,16 @@ class ProfilePage extends StatelessWidget {
 
   void _showEditProfileDialog(BuildContext context, AuthProvider auth) {
     final user = auth.currentUser;
-    final namaController = TextEditingController(text: user?.nama);
-    final nimController = TextEditingController(text: user?.nim ?? '');
-    final waController = TextEditingController(text: user?.noWhatsapp ?? '');
+    
+    // Coba ambil data dari metadata jika available
+    final currentUser = auth.currentUser;
+    final namaController = TextEditingController(
+      text: currentUser?.nama ?? 'User Baru',
+    );
+    final nimController = TextEditingController(text: currentUser?.nim ?? '');
+    final waController =
+        TextEditingController(text: currentUser?.noWhatsapp ?? '');
+    
     final List<String> departments = [
       'PSD',
       'RELACS',
@@ -301,57 +432,175 @@ class ProfilePage extends StatelessWidget {
         ? user!.departemen
         : departments.first;
 
+    final isAutoEdit = _isPlaceholderProfile(user);
+
     showDialog(
       context: context,
+      barrierDismissible: !isAutoEdit, // Prevent dismiss jika auto-edit
       builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) => AlertDialog(
-          title: const Text('Edit Profil'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+        builder: (context, setStateDialog) {
+          bool isSaving = false;
+
+          return AlertDialog(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextField(
-                  controller: namaController,
-                  decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+                Text(
+                  isAutoEdit ? 'Lengkapi Data Profil Anda' : 'Edit Profil',
                 ),
-                TextField(
-                  controller: nimController,
-                  decoration: const InputDecoration(labelText: 'NIM'),
-                ),
-                DropdownButton<String>(
-                  value: selectedDept,
-                  isExpanded: true,
-                  items: departments
-                      .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                      .toList(),
-                  onChanged: (val) => setStateDialog(() => selectedDept = val!),
-                ),
-                TextField(
-                  controller: waController,
-                  decoration: const InputDecoration(labelText: 'No. WhatsApp'),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                 ),
               ],
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isAutoEdit)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue[200]!),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.info, color: Colors.blue, size: 20),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Silakan lengkapi data profil Anda untuk melanjutkan',
+                                style: TextStyle(fontSize: 12, color: Colors.blue),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  TextField(
+                    controller: namaController,
+                    enabled: !isSaving,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama Lengkap',
+                      hintText: 'Masukkan nama lengkap Anda',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: nimController,
+                    enabled: !isSaving,
+                    decoration: const InputDecoration(
+                      labelText: 'NIM / ID',
+                      hintText: 'Masukkan NIM atau ID Anda',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButton<String>(
+                    value: selectedDept,
+                    isExpanded: true,
+                    disabledHint: Text(selectedDept),
+                    items: isSaving
+                        ? null
+                        : departments
+                            .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                            .toList(),
+                    onChanged: isSaving
+                        ? null
+                        : (val) => setStateDialog(() => selectedDept = val!),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: waController,
+                    enabled: !isSaving,
+                    decoration: const InputDecoration(
+                      labelText: 'No. WhatsApp',
+                      hintText: 'Contoh: 6281234567890',
+                    ),
+                    keyboardType: TextInputType.phone,
+                  ),
+                ],
+              ),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                await auth.updateProfile(
-                  nama: namaController.text,
-                  departemen: selectedDept,
-                  nim: nimController.text,
-                  noWhatsapp: waController.text,
-                );
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: const Text('Simpan'),
-            ),
-          ],
-        ),
+            actions: [
+              if (!isAutoEdit && !isSaving)
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Batal'),
+                ),
+              ElevatedButton(
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        final nama = namaController.text.trim();
+                        final nim = nimController.text.trim();
+                        final wa = waController.text.trim();
+
+                        if (nama.isEmpty || nim.isEmpty || wa.isEmpty) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Semua field harus diisi'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                          return;
+                        }
+
+                        setStateDialog(() => isSaving = true);
+
+                        final success = await auth.updateProfile(
+                          nama: nama,
+                          departemen: selectedDept,
+                          nim: nim,
+                          noWhatsapp: wa,
+                        );
+
+                        if (!context.mounted) return;
+
+                        setStateDialog(() => isSaving = false);
+
+                        if (success) {
+                          Navigator.pop(context);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Profil berhasil diperbarui!'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        } else {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Gagal menyimpan profil. Silakan coba lagi.'),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                child: isSaving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(isAutoEdit ? 'Simpan & Lanjutkan' : 'Simpan'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

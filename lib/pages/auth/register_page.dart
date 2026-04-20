@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 
@@ -76,9 +77,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (!mounted) return;
 
-    Navigator.pop(context);
-
     if (success) {
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Registrasi berhasil!'),
@@ -194,6 +194,36 @@ class _RegisterPageState extends State<RegisterPage> {
                   onChanged: (val) => setState(() => _selectedDepartemen = val),
                   validator: (val) =>
                       val == null ? 'Departemen tidak boleh kosong' : null,
+                ),
+                const SizedBox(height: 18),
+
+                // NIM / ID
+                _buildField(
+                  controller: _nimController,
+                  label: 'NIM / ID',
+                  hint: 'Masukkan NIM atau ID',
+                  icon: Icons.badge_outlined,
+                  primary: primary,
+                  validator: (v) =>
+                      v!.trim().isEmpty ? 'NIM / ID tidak boleh kosong' : null,
+                ),
+                const SizedBox(height: 18),
+
+                // Nomor WhatsApp
+                _buildField(
+                  controller: _waController,
+                  label: 'Nomor WhatsApp',
+                  hint: 'Contoh: 0812xxxxxxx',
+                  icon: Icons.phone_android_outlined,
+                  primary: primary,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (v) {
+                    final value = v?.trim() ?? '';
+                    if (value.isEmpty) return 'Nomor WhatsApp tidak boleh kosong';
+                    if (value.length < 10) return 'Nomor WhatsApp tidak valid';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 18),
 
@@ -327,6 +357,7 @@ class _RegisterPageState extends State<RegisterPage> {
     required IconData icon,
     required Color primary,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
     bool obscure = false,
     VoidCallback? onToggleObscure,
     String? Function(String?)? validator,
@@ -342,6 +373,7 @@ class _RegisterPageState extends State<RegisterPage> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           obscureText: obscure,
           decoration: InputDecoration(
             hintText: hint,

@@ -179,6 +179,44 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
+  // ── Auto-Notification for Overdue (Admin) ──────────────────────────────────
+  Future<void> checkAndNotifyOverdue() async {
+    try {
+      final now = DateTime.now();
+      final loansRes = await SupabaseService.table('peminjaman')
+          .select('*, users(nama), barang(nama_barang)')
+          .eq('status', 'disetujui')
+          .lt('rencana_kembali', now.toIso8601String());
+
+      for (var loan in (loansRes as List)) {
+        final userName = loan['users']['nama'];
+        final assetName = loan['barang']['nama_barang'];
+
+        // Cek apakah sudah ada notif jatuh tempo untuk peminjaman ini hari ini
+        final today = DateTime(now.year, now.month, now.day);
+        final existingNotif = await SupabaseService.table('notifications')
+            .select()
+            .eq('title', 'Jatuh Tempo!')
+          .ilike('message', '%$assetName%')
+            .gte('created_at', today.toIso8601String());
+
+        if ((existingNotif as List).isEmpty) {
+          await SupabaseService.table('notifications').insert({
+            'user_id': null,
+            'title': 'Jatuh Tempo!',
+            'message':
+                'Peminjaman $assetName oleh $userName telah melewati batas waktu.',
+            'type': 'peminjaman',
+            'is_read': false,
+          });
+          debugPrint('Notification created for overdue asset: $assetName');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checkAndNotifyOverdue: $e');
+    }
+  }
+
   // ── Cleanup ─────────────────────────────────────────────────────────────────
   void clearNotifications() {
     _notifications = [];

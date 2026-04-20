@@ -18,14 +18,28 @@ class ApprovalsAdminPage extends StatefulWidget {
 }
 
 class _ApprovalsAdminPageState extends State<ApprovalsAdminPage> {
+  ApprovalProvider? _approvalProvider;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadAll());
+    _approvalProvider = context.read<ApprovalProvider>();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadAll();
+      if (!mounted) return;
+      await _approvalProvider?.startAdminApprovalRealtime();
+    });
+  }
+
+  @override
+  void dispose() {
+    _approvalProvider?.stopAdminApprovalRealtime();
+    super.dispose();
   }
 
   Future<void> _loadAll() async {
-    await context.read<ApprovalProvider>().fetchAllForAdmin();
+    await (_approvalProvider ?? context.read<ApprovalProvider>())
+        .fetchAllForAdmin();
   }
 
   @override

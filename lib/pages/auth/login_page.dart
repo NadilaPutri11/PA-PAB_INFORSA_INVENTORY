@@ -91,10 +91,17 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.inventory_2_rounded,
-                  color: Colors.white,
-                  size: 46,
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Image.asset(
+                    'assets/logo_inforsa.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.shield_outlined,
+                      color: Colors.white,
+                      size: 44,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 22),
@@ -251,8 +258,9 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 28),
 
               // Register Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(
                     'Belum punya akun? ',

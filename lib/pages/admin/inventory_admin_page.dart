@@ -18,7 +18,6 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
   final _searchController = TextEditingController();
 
   // State filter
-  String _selectedKeadaan = 'Semua';
   String _selectedAsal = 'Semua';
   String _selectedKategori = 'Semua';
   String _selectedTahun = 'Semua Tahun';
@@ -35,7 +34,10 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<InventoryProvider>().fetchItems();
+      final inventory = context.read<InventoryProvider>();
+      if (inventory.items.isEmpty) {
+        inventory.fetchItems();
+      }
     });
   }
 
@@ -169,10 +171,6 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
           item.namaBarang.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           item.kodeBarang.toLowerCase().contains(_searchQuery.toLowerCase());
 
-      final matchKeadaan =
-          _selectedKeadaan == 'Semua' ||
-          item.kondisiBarang.toLowerCase() == _selectedKeadaan.toLowerCase();
-
       final matchAsal =
           _selectedAsal == 'Semua' ||
           item.asalBarang.toLowerCase() == _selectedAsal.toLowerCase();
@@ -185,11 +183,7 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
           _selectedKategori == 'Semua' ||
           _cekKategoriBarang(item.namaBarang) == _selectedKategori;
 
-      return matchSearch &&
-          matchKeadaan &&
-          matchAsal &&
-          matchSatuan &&
-          matchKategori;
+      return matchSearch && matchAsal && matchSatuan && matchKategori;
     }).toList();
 
     // Sorting Data (Terbaru / Terlama)
@@ -265,13 +259,6 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
                     ),
                     children: [
                       FilterRowWidget(
-                        label: 'KEADAAN:',
-                        options: const ['Semua', 'Baik', 'Rusak'],
-                        selectedValue: _selectedKeadaan,
-                        onSelect: (val) =>
-                            _updateFilter(() => _selectedKeadaan = val),
-                      ),
-                      FilterRowWidget(
                         label: 'ASAL:',
                         options: const ['Semua', 'Beli', 'Hibah'],
                         selectedValue: _selectedAsal,
@@ -338,7 +325,11 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
               const SizedBox(height: 24),
 
               // List Aset
-              _buildListAset(inventory.isLoading, paginatedItems),
+              _buildListAset(
+                inventory.isLoading,
+                inventory.items.isEmpty,
+                paginatedItems,
+              ),
               const SizedBox(height: 80),
             ],
           ),
@@ -440,8 +431,12 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
     );
   }
 
-  Widget _buildListAset(bool isLoading, List<ItemModel> items) {
-    if (isLoading) {
+  Widget _buildListAset(
+    bool isLoading,
+    bool hasNoCachedData,
+    List<ItemModel> items,
+  ) {
+    if (isLoading && hasNoCachedData) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(48),
@@ -747,6 +742,55 @@ class AdminAssetCard extends StatelessWidget {
 
   const AdminAssetCard({super.key, required this.item});
 
+  Widget _buildThumbnail() {
+    final photoUrl = item.fotoUrl;
+
+    if (photoUrl == null || photoUrl.trim().isEmpty) {
+      return const Center(
+        child: Icon(
+          Icons.inventory_2_outlined,
+          color: Colors.grey,
+          size: 28,
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.network(
+        photoUrl,
+        width: 60,
+        height: 60,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) {
+          return Container(
+            color: const Color(0xFFE2E8F0),
+            child: const Center(
+              child: Icon(
+                Icons.inventory_2_outlined,
+                color: Colors.grey,
+                size: 28,
+              ),
+            ),
+          );
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: const Color(0xFFE2E8F0),
+            child: const Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isAvailable = item.kondisiBarang.toLowerCase() == 'baik';
@@ -787,13 +831,7 @@ class AdminAssetCard extends StatelessWidget {
               color: const Color(0xFFE2E8F0),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Center(
-              child: Icon(
-                Icons.inventory_2_outlined,
-                color: Colors.grey,
-                size: 28,
-              ),
-            ),
+            child: _buildThumbnail(),
           ),
           const SizedBox(width: 16),
 
@@ -835,12 +873,19 @@ class AdminAssetCard extends StatelessWidget {
                       children: [
                         InkWell(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EditItemPage(item: item),
-                              ),
-                            );
+                            if (!context.mounted) return;
+                            try {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EditItemPage(item: item),
+                                ),
+                              ).catchError((e) {
+                                debugPrint('Edit item navigation error: $e');
+                              });
+                            } catch (e) {
+                              debugPrint('Error navigating to edit: $e');
+                            }
                           },
                           child: const Padding(
                             padding: EdgeInsets.all(4.0),

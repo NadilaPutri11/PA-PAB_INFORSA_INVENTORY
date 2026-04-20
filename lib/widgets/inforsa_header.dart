@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
 import '../providers/notification_provider.dart';
 import '../pages/user/notification_page.dart';
+import '../pages/user/profile_page.dart';
 
 class InforsaHeader extends StatelessWidget implements PreferredSizeWidget {
   const InforsaHeader({super.key});
@@ -12,81 +12,67 @@ class InforsaHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthProvider>().currentUser;
-    final notifCount = context.watch<NotificationProvider>().unreadCount;
-
-    final initial = (user?.nama.isNotEmpty == true)
-        ? user!.nama[0].toUpperCase()
-        : 'U';
+    final notifProvider = context.watch<NotificationProvider>();
+    final unreadCount = notifProvider.notifications.where((n) => !n.isRead).length;
 
     return AppBar(
-      backgroundColor: const Color(0xFF000080),
+      backgroundColor: Colors.white,
       elevation: 0,
-      scrolledUnderElevation: 0,
-      title: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-            ),
-            child: const Icon(
-              Icons.inventory_2_outlined,
-              color: Colors.black,
-              size: 24,
-            ),
+      leadingWidth: 46,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 20),
+        child: Image.asset(
+          'assets/logo_inforsa.png',
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => const Icon(
+            Icons.shield_outlined,
+            color: Color(0xFF1A1F35),
+            size: 18,
           ),
-          const SizedBox(width: 10),
-          const Text(
-            'INFORSA',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
+        ),
+      ),
+      titleSpacing: 4,
+      title: const Text(
+        'INFORSA',
+        style: TextStyle(
+          color: Color(0xFF1A1F35),
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.2,
+          fontSize: 20,
+        ),
       ),
       actions: [
-        // ← Badge notifikasi dari provider
         Stack(
-          clipBehavior: Clip.none,
+          alignment: Alignment.center,
           children: [
             IconButton(
-              icon: const Icon(
-                Icons.notifications_none,
-                color: Colors.white,
-                size: 26,
-              ),
+              icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF1A1F35)),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const NotificationPage()),
+                  MaterialPageRoute(builder: (context) => const NotificationPage()),
                 );
               },
             ),
-            if (notifCount > 0)
+            if (unreadCount > 0)
               Positioned(
-                top: 6,
-                right: 6,
+                right: 8,
+                top: 8,
                 child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: const BoxDecoration(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
                     color: Colors.red,
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   constraints: const BoxConstraints(
                     minWidth: 16,
                     minHeight: 16,
                   ),
                   child: Text(
-                    notifCount > 99 ? '99+' : '$notifCount',
+                    unreadCount > 9 ? '9+' : unreadCount.toString(),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 8,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
@@ -95,22 +81,9 @@ class InforsaHeader extends StatelessWidget implements PreferredSizeWidget {
               ),
           ],
         ),
-        const SizedBox(width: 4),
-        // ← Avatar dari data user, bukan hardcoded URL
         Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: CircleAvatar(
-            radius: 16,
-            backgroundColor: Colors.white.withValues(alpha: 0.2),
-            child: Text(
-              initial,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          padding: const EdgeInsets.only(right: 20, left: 8),
+          child: SizedBox.shrink(),
         ),
       ],
     );

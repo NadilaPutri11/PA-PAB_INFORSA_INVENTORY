@@ -1,19 +1,24 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:excel/excel.dart' as excel_lib;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:csv/csv.dart';
+import 'package:csv/csv.dart' as csv_pkg;
 
 import '../../providers/dashboard_provider.dart';
 import '../../providers/inventory_provider.dart';
-import '../../providers/approval_provider.dart';
+
+import '../user/activity_page.dart';
+import 'user_activity_detail_page.dart';
+import '../../utils/download_web_stub.dart'
+  if (dart.library.html) '../../utils/download_web.dart';
 
 class DashboardAdminPage extends StatefulWidget {
   const DashboardAdminPage({super.key});
@@ -26,25 +31,40 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
   Timer? _debounce;
+  String _selectedSort = 'Terbaru';
+  bool _onlyNearDue = false;
+  DashboardProvider? _dashboardProvider;
+  InventoryProvider? _inventoryProvider;
 
   @override
   void initState() {
     super.initState();
+    _dashboardProvider = context.read<DashboardProvider>();
+    _inventoryProvider = context.read<InventoryProvider>();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final dashboard = context.read<DashboardProvider>();
-      dashboard.fetchDashboardData();
+      final dashboard = _dashboardProvider;
+      if (dashboard == null) return;
+      // Initial load dibuat silent agar tidak menampilkan spinner blok besar.
+      // Jika sudah diprefetch dari splash, hindari fetch ulang.
+      if (dashboard.activeLoans.isEmpty) {
+        dashboard.fetchDashboardData(silent: true);
+      }
       dashboard.startRealtimeUpdates();
-      context.read<InventoryProvider>().fetchItems();
+
+      final inventory = _inventoryProvider;
+      if (inventory == null) return;
+      if (inventory.items.isEmpty) {
+        inventory.fetchItems();
+      }
     });
   }
 
   @override
   void dispose() {
+    _dashboardProvider?.stopRealtimeUpdates();
     _searchController.dispose();
     _debounce?.cancel();
-    // DashboardProvider real-time updates are handled in its own lifecycle if possible,
-    // but here we should probably stop it when this page is not visible.
-    // However, DashboardAdminPage is likely a main tab.
     super.dispose();
   }
 
@@ -72,23 +92,20 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
   }
 
   Widget _buildMobileLayout(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () => context.read<DashboardProvider>().fetchDashboardData(),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 24),
-            _buildMetricGrid(crossAxisCount: 2),
-            const SizedBox(height: 24),
-            _buildSearchAndFilters(),
-            const SizedBox(height: 16),
-            _buildActiveLoansTableSection(),
-            const SizedBox(height: 80), // Space for navbar
-          ],
-        ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(),
+          const SizedBox(height: 24),
+          _buildMetricGrid(crossAxisCount: 2),
+          const SizedBox(height: 24),
+          _buildSearchAndFilters(),
+          const SizedBox(height: 16),
+          _buildActiveLoansTableSection(),
+          const SizedBox(height: 80), // Space for navbar
+        ],
       ),
     );
   }
@@ -225,7 +242,7 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
             onChanged: _onSearchChanged,
             decoration: const InputDecoration(
               icon: Icon(Icons.search, color: Color(0xFFA3AED0)),
-              hintText: 'Cari nama aset, SKU, atau kategori...',
+              hintText: 'Cari user atau nama barang...',
               hintStyle: TextStyle(color: Color(0xFFA3AED0), fontSize: 14),
               border: InputBorder.none,
             ),
@@ -235,15 +252,34 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
         Row(
           children: [
             _buildFilterButton(
-              label: 'Kondisi',
-              icon: Icons.category_outlined,
-              onTap: () {},
+              label: _onlyNearDue ? '< 3 Hari' : 'Semua Aktif',
+              icon: Icons.timelapse_outlined,
+              onTap: () {
+                setState(() {
+                  _onlyNearDue = !_onlyNearDue;
+                });
+              },
             ),
             const SizedBox(width: 12),
             _buildFilterButton(
-              label: 'Terbaru',
+              label: _selectedSort,
               icon: Icons.sort,
-              onTap: () {},
+              onTap: () {
+                setState(() {
+                  _selectedSort = _selectedSort == 'Terbaru'
+                      ? 'Terlama'
+                      : 'Terbaru';
+                });
+              },
+            ),
+            const SizedBox(width: 12),
+            _buildFilterButton(
+              label: 'Refresh',
+              icon: Icons.refresh,
+              onTap: () {
+                context.read<DashboardProvider>().fetchDashboardData(silent: true);
+                context.read<InventoryProvider>().fetchItems();
+              },
             ),
           ],
         ),
@@ -299,10 +335,6 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
   Widget _buildMetricGrid({required int crossAxisCount}) {
     final dashboard = context.watch<DashboardProvider>();
     final inventory = context.watch<InventoryProvider>();
-
-    if (dashboard.isLoading && dashboard.metrics == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
 
     final totalItems = inventory.items.length;
     final baikCount = inventory.items
@@ -410,6 +442,10 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
   }
 
   Widget _buildActiveLoansTableSection() {
+    final title = _onlyNearDue
+        ? 'Peminjaman Aktif (< 3 Hari)'
+        : 'Peminjaman Aktif (Semua)';
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -426,13 +462,47 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Peminjaman Aktif (Nearing Due)',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2B3674),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2B3674),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  // Admin sees all activity
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ActivityPage(),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4318FF).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Lihat Detail',
+                    style: TextStyle(
+                      color: Color(0xFF4318FF),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           SizedBox(height: 400, child: _buildActiveLoansTable()),
@@ -443,7 +513,26 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
 
   Widget _buildActiveLoansTable() {
     final dashboard = context.watch<DashboardProvider>();
-    final loans = dashboard.activeLoans;
+
+    // Filtering
+    List<ActiveLoanData> filteredLoans = dashboard.activeLoans.where((loan) {
+      final matchSearch =
+          _searchQuery.isEmpty ||
+          loan.userName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          loan.userPhone.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          loan.assetName.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchNearDue = !_onlyNearDue || loan.isNearingDue;
+      return matchSearch && matchNearDue;
+    }).toList();
+
+    // Sorting
+    filteredLoans.sort((a, b) {
+      if (_selectedSort == 'Terbaru') {
+        return b.dueDate.compareTo(a.dueDate);
+      } else {
+        return a.dueDate.compareTo(b.dueDate);
+      }
+    });
 
     return DataTable2(
       columnSpacing: 12,
@@ -451,55 +540,55 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
       minWidth: 600,
       columns: [
         const DataColumn2(label: Text('USER'), size: ColumnSize.L),
+        const DataColumn2(label: Text('WHATSAPP'), size: ColumnSize.M),
         const DataColumn2(label: Text('ASET'), size: ColumnSize.L),
         const DataColumn2(label: Text('TIPE'), size: ColumnSize.S),
-        const DataColumn2(label: Text('<3 HARI'), size: ColumnSize.S),
+        const DataColumn2(label: Text('STATUS'), size: ColumnSize.S),
+        const DataColumn2(label: Text('TANGGAL'), size: ColumnSize.M),
+        const DataColumn2(label: Text('AKSI'), size: ColumnSize.S),
       ],
-      rows: loans.map((loan) {
+      rows: filteredLoans.map((loan) {
+        final statusLabel = loan.status.toUpperCase();
         return DataRow(
           cells: [
             DataCell(
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 14,
-                        backgroundColor: const Color(
-                          0xFF4318FF,
-                        ).withValues(alpha: 0.1),
-                        child: Text(
-                          loan.userName[0].toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFF4318FF),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        loan.userName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2B3674),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 36.0),
+                  CircleAvatar(
+                    radius: 14,
+                    backgroundColor: const Color(
+                      0xFF4318FF,
+                    ).withValues(alpha: 0.1),
                     child: Text(
-                      loan.userPhone,
+                      loan.userName.isNotEmpty ? loan.userName[0].toUpperCase() : 'U',
                       style: const TextStyle(
                         fontSize: 10,
-                        color: Color(0xFFA3AED0),
+                        color: Color(0xFF4318FF),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      loan.userName,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2B3674),
                       ),
                     ),
                   ),
                 ],
+              ),
+            ),
+            DataCell(
+              Text(
+                loan.userPhone,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF2B3674),
+                ),
               ),
             ),
             DataCell(
@@ -526,6 +615,25 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
               ),
             ),
             DataCell(
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: loan.status == 'disetujui'
+                      ? const Color(0xFFE0F2FE)
+                      : const Color(0xFFFEE2E2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    color: loan.status == 'disetujui' ? Colors.blue : Colors.red,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            DataCell(
               Text(
                 DateFormat('dd MMM yyyy').format(loan.dueDate),
                 style: TextStyle(
@@ -536,6 +644,19 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
                       ? FontWeight.bold
                       : FontWeight.normal,
                 ),
+              ),
+            ),
+            DataCell(
+              IconButton(
+                icon: const Icon(Icons.visibility_outlined, size: 20),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserActivityDetailPage(loanId: loan.id),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -571,19 +692,37 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
 
     final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     final fileName = 'dashboard_export_$timestamp.xlsx';
+    final bytes = excel.encode();
+    if (bytes == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal membuat file Excel.')),
+      );
+      return;
+    }
+
+    if (kIsWeb) {
+      await downloadBytesWeb(
+        bytes,
+        fileName,
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('File Excel berhasil diunduh.')),
+      );
+      return;
+    }
 
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/$fileName');
+    await file.writeAsBytes(bytes);
 
-    final bytes = excel.encode();
-    if (bytes != null) {
-      await file.writeAsBytes(bytes);
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('File diekspor ke ${file.path}')));
-      await OpenFilex.open(file.path);
-    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('File diekspor ke ${file.path}')));
+    await OpenFilex.open(file.path);
   }
 
   Future<void> _exportToCSV() async {
@@ -609,9 +748,22 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
       ]);
     }
 
-    String csvContent = CsvEncoder().convert(rows);
+    String csvContent = csv_pkg.CsvEncoder().convert(rows);
     final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     final fileName = 'dashboard_export_$timestamp.csv';
+
+    if (kIsWeb) {
+      await downloadBytesWeb(
+        utf8.encode(csvContent),
+        fileName,
+        'text/csv;charset=utf-8',
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('File CSV berhasil diunduh.')),
+      );
+      return;
+    }
 
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/$fileName');

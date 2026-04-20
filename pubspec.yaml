@@ -36,5 +36,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - .env
-    - "assets/logo inforsa.png"
+    - assets/.env
+    - assets/logo_inforsa.png

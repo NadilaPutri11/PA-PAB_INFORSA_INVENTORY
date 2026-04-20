@@ -16,6 +16,7 @@ class PeminjamanModel {
   final String? kodeBarang;
   final String? namaUser;
   final String? departemenUser;
+  final String? noWhatsappUser;
 
   PeminjamanModel({
     required this.id,
@@ -33,6 +34,7 @@ class PeminjamanModel {
     this.kodeBarang,
     this.namaUser,
     this.departemenUser,
+    this.noWhatsappUser,
   });
 
   bool get isMenunggu => status == 'menunggu';
@@ -71,6 +73,7 @@ class PeminjamanModel {
       kodeBarang: map['barang'] != null ? map['barang']['kode_barang'] : null,
       namaUser: map['users'] != null ? map['users']['nama'] : null,
       departemenUser: map['users'] != null ? map['users']['departemen'] : null,
+      noWhatsappUser: map['users'] != null ? map['users']['no_whatsapp'] : null,
     );
   }
 

@@ -87,10 +87,10 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
       );
 
       if (success && mounted) {
-        _showSnackBar('Permintaan berhasil dikirim');
+        _showSnackBar('Permohonan peminjaman berhasil dikirim');
         Navigator.pop(context, true);
       } else {
-        throw 'Gagal menyimpan data ke database.';
+        throw approval.errorMessage ?? 'Gagal menyimpan data ke database.';
       }
     } catch (e) {
       _showSnackBar(e.toString(), isError: true);
@@ -106,100 +106,139 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
 
-    // Set nilai departemen otomatis untuk kebutuhan submit
+    // Gunakan post-frame callback untuk set state agar tidak terjadi rebuild loop
     if (_selectedDepartment == null && user != null) {
       _selectedDepartment = user.departemen;
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Form Peminjaman')),
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Form Peminjaman',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. NAMA PEMINJAM (Otomatis dari Register)
-            const Text(
-              'Nama Peminjam',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            // Info Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF000080).withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF000080).withValues(alpha: 0.1),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Color(0xFF000080)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Pastikan data diri Anda sudah benar sebelum mengirim permohonan.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: const Color(0xFF000080).withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
+
+            // 1. NAMA PEMINJAM (Auto-fill)
+            _buildSectionLabel('NAMA PEMINJAM'),
             _buildReadOnlyField(
               user?.nama ?? 'Nama tidak ditemukan',
               Icons.person_outline,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            // 2. DEPARTEMEN (Otomatis dari Register)
-            const Text(
-              'Departemen',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
+            // 2. DEPARTEMEN (Auto-fill)
+            _buildSectionLabel('DEPARTEMEN'),
             _buildReadOnlyField(
               user?.departemen ?? 'Departemen tidak ditemukan',
               Icons.business_outlined,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             // 3. NAMA BARANG
-            const Text(
-              'Nama Barang',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
+            _buildSectionLabel('ASET YANG DIPINJAM'),
             _buildReadOnlyField(
               widget.item?.namaBarang ?? '-',
               Icons.inventory_2_outlined,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            // 4. RENCANA PINJAM
-            const Text(
-              'Rencana Pinjam',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            // 4. RENCANA PINJAM & KEMBALI
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionLabel('TANGGAL PINJAM'),
+                      InkWell(
+                        onTap: () async {
+                          final d = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 30)),
+                          );
+                          if (d != null) setState(() => _borrowDate = d);
+                        },
+                        child: _buildDateField(_borrowDate, fmt),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionLabel('TANGGAL KEMBALI'),
+                      InkWell(
+                        onTap: () async {
+                          final d = await showDatePicker(
+                            context: context,
+                            initialDate: _borrowDate ?? DateTime.now(),
+                            firstDate: _borrowDate ?? DateTime.now(),
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 60)),
+                          );
+                          if (d != null) setState(() => _returnDate = d);
+                        },
+                        child: _buildDateField(_returnDate, fmt),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: () async {
-                final d = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 30)),
-                );
-                if (d != null) setState(() => _borrowDate = d);
-              },
-              child: _buildDateField(_borrowDate, fmt),
-            ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            // 5. RENCANA KEMBALI
-            const Text(
-              'Rencana Kembali',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: () async {
-                final d = await showDatePicker(
-                  context: context,
-                  initialDate: _borrowDate ?? DateTime.now(),
-                  firstDate: _borrowDate ?? DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 60)),
-                );
-                if (d != null) setState(() => _returnDate = d);
-              },
-              child: _buildDateField(_returnDate, fmt),
-            ),
-            const SizedBox(height: 16),
-
-            // Di dalam Column children:
-            const Text(
-              'Foto Kondisi Aset (Depan & Belakang)',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
+            // Foto Kondisi
+            _buildSectionLabel('FOTO KONDISI ASET (WAJIB)'),
             Row(
               children: [
                 Expanded(child: _buildPhotoBox('Foto Depan', _foto1, true)),
@@ -207,59 +246,78 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
                 Expanded(child: _buildPhotoBox('Foto Belakang', _foto2, false)),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             // 6. ALASAN PEMINJAMAN
-            const Text(
-              'Alasan Peminjaman',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
+            _buildSectionLabel('ALASAN PEMINJAMAN'),
             TextField(
               controller: _alasanController,
               maxLines: 3,
+              style: const TextStyle(fontSize: 14),
               decoration: InputDecoration(
-                hintText: 'Masukkan alasan...',
+                hintText: 'Contoh: Untuk keperluan dokumentasi event...',
+                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
                 filled: true,
-                fillColor: const Color(0xFFEBECEF),
+                fillColor: const Color(0xFFF1F3F6),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
 
             // TOMBOL KIRIM
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 54,
               child: ElevatedButton(
                 onPressed: _isUploading ? null : _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(
-                    0xFF000080,
-                  ), // Warna Navy sesuai desain
+                  backgroundColor: const Color(0xFF000080),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  elevation: 0,
                 ),
                 child: _isUploading
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      )
                     : const Text(
-                        'Kirim Permintaan',
+                        'Kirim Permohonan Pinjam',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
               ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildSectionLabel(String label) => Padding(
+    padding: const EdgeInsets.only(bottom: 8.0, left: 4),
+    child: Text(
+      label,
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.bold,
+        color: Colors.grey[600],
+        letterSpacing: 0.5,
+      ),
+    ),
+  );
 
   Widget _buildReadOnlyField(String text, IconData icon) => Container(
     padding: const EdgeInsets.all(16),

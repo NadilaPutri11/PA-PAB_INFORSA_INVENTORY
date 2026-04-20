@@ -17,7 +17,7 @@ Future<void> main() async {
 
   await initializeDateFormatting('id', null);
 
-  await dotenv.load(fileName: '.env');
+  await dotenv.load(fileName: 'assets/.env');
 
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
@@ -84,6 +84,18 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (auth.isLoggedIn) {
+      if (auth.isAdmin) {
+        // Prefetch data admin saat splash agar dashboard langsung terisi.
+        try {
+          await Future.wait([
+            context.read<DashboardProvider>().fetchDashboardData(silent: true),
+            context.read<InventoryProvider>().fetchItems(),
+          ]);
+        } catch (_) {
+          // Jika prefetch gagal, tetap lanjut ke halaman admin.
+        }
+      }
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -101,7 +113,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: Color(0xFF000080),
       body: Center(
         child: Column(
@@ -111,10 +123,17 @@ class _SplashScreenState extends State<SplashScreen> {
             CircleAvatar(
               radius: 40,
               backgroundColor: Colors.white,
-              child: Icon(
-                Icons.inventory_2_outlined,
-                color: Color(0xFF000080),
-                size: 40,
+              child: Padding(
+                padding: EdgeInsets.all(8),
+                child: Image.asset(
+                  'assets/logo_inforsa.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.shield_outlined,
+                    color: Colors.white,
+                    size: 44,
+                  ),
+                ),
               ),
             ),
             SizedBox(height: 24),
