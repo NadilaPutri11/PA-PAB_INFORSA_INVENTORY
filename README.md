@@ -96,11 +96,11 @@ Bagian ini diperbarui berdasarkan isi `pubspec.yaml` dan pemakaian aktual di fol
 - **`open_filex`** (^4.7.0) - Dipakai untuk membuka file hasil ekspor setelah berhasil dibuat.
 - **`flutter_test`** (SDK) - Dipakai pada `test/dashboard_test.dart` untuk unit test sederhana provider dashboard.
 - **`flutter_lints`** (^6.0.0) - Dipakai sebagai aturan linting project, bukan package runtime aplikasi.
-- **`fl_chart**` digunakan untuk menampilkan grafik pada dashboard aplikasi.
-- **`cached_network_image**` digunakan untuk memuat dan menyimpan (cache) gambar barang dari internet.
-- **`rxdart**` digunakan untuk mengelola pembaruan data secara realtime.
-- **`cupertino_icons**` digunakan untuk menyediakan ikon pada antarmuka aplikasi.
-- **`mockito**` digunakan untuk membuat data simulasi saat pengujian.
+- **`fl_chart`** digunakan untuk menampilkan grafik pada dashboard aplikasi.
+- **`cached_network_image`** digunakan untuk memuat dan menyimpan (cache) gambar barang dari internet.
+- **`rxdart`** digunakan untuk mengelola pembaruan data secara realtime.
+- **`cupertino_icons`** digunakan untuk menyediakan ikon pada antarmuka aplikasi.
+- **`mockito`** digunakan untuk membuat data simulasi saat pengujian.
 - **`test`** digunakan untuk melakukan unit testing pada aplikasi.
 
 ---
@@ -110,41 +110,46 @@ Bagian ini diperbarui berdasarkan isi `pubspec.yaml` dan pemakaian aktual di fol
 Berikut adalah widget Flutter yang benar-benar muncul di source code project ini, dikelompokkan berdasarkan perannya di UI.
 
 ## 1. Struktur Aplikasi & Navigasi
-- **MaterialApp** (root aplikasi dan pengaturan tema/routing).
-- **Scaffold**, **SafeArea**, **AppBar** (struktur dasar halaman dan header).
-- **DefaultTabController**, **TabBar**, **TabBarView** (navigasi berbasis tab).
-- **BottomNavigationBar**, **BottomNavigationBarItem** (navigasi menu bawah).
-- **Navigator**, **MaterialPageRoute** (perpindahan antar halaman).
+
+- **`MaterialApp`** (root aplikasi dan pengaturan tema/routing).
+- **`Scaffold`**, **`SafeArea`**, **`AppBar`** (struktur dasar halaman dan header).
+- **`DefaultTabController`**, **`TabBar`**, **`TabBarView`** (navigasi berbasis tab).
+- **`BottomNavigationBar`**, **`BottomNavigationBarItem`** (navigasi menu bawah).
+- **`Navigator`**, **`MaterialPageRoute`** (perpindahan antar halaman).
 
 ## 3. Layout & Pembungkus Konten
-- **Container**, **Padding**, **SizedBox** (pengaturan ukuran, jarak dalam, dan styling).
-- **Column**, **Row**, **Expanded**, **Center** (pengaturan layout vertikal dan horizontal).
-- **Stack**, **Positioned**, **Wrap** (layout fleksibel dan penumpukan widget).
-- **SingleChildScrollView**, **ListView.builder**, **ListView.separated** (konten yang dapat di-scroll).
-- **GridView.count**, **ExpansionTile** (tampilan grid dan list expandable).
-- **Margin** (jarak luar antar elemen, biasanya melalui **Container**).
-  
+
+- **`Container`**, **`Padding`**, **`SizedBox`** (pengaturan ukuran, jarak dalam, dan styling).
+- **`Column`**, **`Row`**, **`Expanded`**, **`Center`** (pengaturan layout vertikal dan horizontal).
+- **`Stack`**, **`Positioned`**, **`Wrap`** (layout fleksibel dan penumpukan widget).
+- **`SingleChildScrollView`**, **`ListView.builder`**, **`ListView.separated`** (konten yang dapat di-scroll).
+- **`GridView.count`**, **`ExpansionTile`** (tampilan grid dan list expandable).
+- **`Margin`** (jarak luar antar elemen, biasanya melalui **`Container`**).
+
 ## 4. Form & Interaksi
-- **TextField**, **TextFormField** (untuk form login, register, dan input data barang).
-- **DropdownButtonFormField**, **DropdownButton**, **DropdownMenuItem** (untuk memilih kategori seperti asal barang, kondisi, dll).
-- **ElevatedButton**, **OutlinedButton**, **TextButton** (untuk aksi utama dan sekunder).
-- **IconButton**, **GestureDetector**, **InkWell** (untuk interaksi berbasis tap/gesture).
-- **PopupMenuButton**, **PopupMenuItem** (untuk menu tambahan seperti edit/hapus).
-- **showDatePicker** (untuk memilih tanggal).
+
+- **`TextField`**, **`TextFormField`** (untuk form login, register, dan input data barang).
+- **`DropdownButtonFormField`**, **`DropdownButton`**, **`DropdownMenuItem`** (untuk memilih kategori seperti asal barang, kondisi, dll).
+- **`ElevatedButton`**, **`OutlinedButton`**, **`TextButton`** (untuk aksi utama dan sekunder).
+- **`IconButton`**, **`GestureDetector`**, **`InkWell`** (untuk interaksi berbasis tap/gesture).
+- **`PopupMenuButton`**, **`PopupMenuItem`** (untuk menu tambahan seperti edit/hapus).
+- **`showDatePicker`** (untuk memilih tanggal).
 
 ## 5. Tampilan Data (Display)
-- **Text**, **Icon** (Material Icons & Cupertino).
-- **CircleAvatar**, **Badge** (untuk foto profil dan indikator notifikasi).
-- **Card**, **ListTile**, **Divider** (untuk menampilkan daftar item, aktivitas, dan riwayat).
-- **Image.asset**, **Image.network**, **CachedNetworkImage** (untuk menampilkan gambar lokal dan dari internet).
-- **DataTable2**, **DataColumn2**, **DataRow**, **DataCell** (untuk menampilkan data dalam bentuk tabel).
-- **RichText**, **TextSpan** (untuk teks dengan berbagai gaya dalam satu baris).
-  
-## 6. Feedback & Dialog
-- **AlertDialog**, **showDialog** (untuk konfirmasi aksi seperti hapus data).
-- **SnackBar** (untuk notifikasi sukses atau gagal).
-- **CircularProgressIndicator** (indikator loading saat proses data).
 
+- **`Text`**, **`Icon`** (Material Icons & Cupertino).
+- **`CircleAvatar`**, **`Badge`** (untuk foto profil dan indikator notifikasi).
+- **`Card`**, **`ListTile`**, **`Divider`** (untuk menampilkan daftar item, aktivitas, dan riwayat).
+- **`Image.asset`**, **`Image.network`**, **`CachedNetworkImage`** (untuk menampilkan gambar lokal dan dari internet).
+- **`DataTable2`**, **`DataColumn2`**, **`DataRow`**, **`DataCell`** (untuk menampilkan data dalam bentuk tabel).
+- **`RichText`**, **`TextSpan`** (untuk teks dengan berbagai gaya dalam satu baris).
+
+## 6. Feedback & Dialog
+
+- **`AlertDialog`**, **`showDialog`** (untuk konfirmasi aksi seperti hapus data).
+- **`SnackBar`** (untuk notifikasi sukses atau gagal).
+- **`CircularProgressIndicator`** (indikator loading saat proses data).
+  
 ## 7. Responsive dan custom widget project
 
 - **`ScreenTypeLayout.builder`** (Dipakai pada dashboard admin agar layout menyesuaikan ukuran layar)
