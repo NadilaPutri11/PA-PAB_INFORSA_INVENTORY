@@ -11,61 +11,67 @@
 
 ---
 
-# INFORSA INVENTORY
+# INFORSA INVENTORY ᯓᡣ𐭩
 
-Aplikasi **Inforsa Inventory** adalah sistem digital untuk membantu pengelolaan inventaris barang pada Department Bureau of Entrepreneurship Development di organisasi INFORSA. Aplikasi ini dibuat untuk merapikan proses pencatatan barang, peminjaman, pengembalian, dan pertanggungjawaban penggunaan inventaris.
+Aplikasi **Inforsa Inventory** merupakan sistem berbasis digital yang dirancang untuk membantu pengelolaan inventaris barang pada Department Bureau of Entrepreneurship Development di organisasi INFORSA. Aplikasi ini dibuat untuk mengatasi permasalahan dalam pencatatan barang, peminjaman, serta pertanggungjawaban penggunaan inventaris yang sebelumnya belum terstruktur dengan baik.
 
-Melalui aplikasi ini, proses peminjaman dapat dilakukan secara sistematis dengan pencatatan status peminjaman, batas waktu pengembalian, identitas peminjam, serta unggahan foto kondisi barang sebelum dan sesudah digunakan. Aplikasi juga menyediakan riwayat aktivitas agar setiap transaksi tercatat dengan jelas dan akuntabel.
+Melalui aplikasi ini, proses peminjaman barang dapat dilakukan secara sistematis dengan adanya pencatatan status peminjaman, batas waktu pengembalian, serta identitas peminjam. Selain itu, aplikasi ini juga menyediakan fitur dokumentasi kondisi barang melalui unggahan foto sebelum dan sesudah peminjaman, sehingga kondisi barang dapat dipantau dengan lebih transparan.
 
----
+Inforsa Inventory juga dilengkapi dengan sistem pencatatan riwayat aktivitas yang memungkinkan setiap transaksi tercatat dengan jelas. Hal ini bertujuan untuk meningkatkan akuntabilitas dan meminimalisir risiko kehilangan atau kerusakan barang tanpa tanggung jawab yang jelas.
 
-# Fitur Aplikasi
-
-Fitur utama pada aplikasi dibagi berdasarkan peran pengguna agar pengelolaan inventaris dan alur peminjaman berjalan lebih tertib.
-
-### 1. Login dan Role
-
-Terdapat dua peran utama, yaitu admin dan user. Admin memiliki akses penuh terhadap pengelolaan data inventaris, sedangkan user berfokus pada operasional peminjaman.
-
-### 2. Kelola Barang (Admin)
-
-Admin dapat menambah, mengedit, dan menghapus data barang. Fitur ini terhubung dengan Supabase Storage untuk penyimpanan foto barang dan dokumen nota.
-
-### 3. Katalog Inventaris (User)
-
-User dapat melihat daftar inventaris yang tersedia, stok barang, serta detail spesifikasi dan kondisi sebelum mengajukan peminjaman.
-
-### 4. Peminjaman, Perpanjangan, dan Pengembalian
-
-User dapat mengajukan peminjaman barang, memperpanjang masa pinjam, dan memulai proses pengembalian dengan mengunggah bukti kondisi barang.
-
-### 5. Approval (Admin)
-
-Admin dapat meninjau pengajuan peminjaman, perpanjangan, dan pengembalian sebelum memberikan persetujuan atau penolakan.
-
-### 6. Notifikasi
-
-Sistem memberikan notifikasi terkait perubahan status pengajuan dan pengingat jatuh tempo peminjaman.
-
-### 7. Profil dan Riwayat Aktivitas
-
-User dapat mengelola profil, melihat riwayat aktivitas, dan mengakses kontak bantuan melalui integrasi WhatsApp admin.
+Dengan adanya aplikasi ini, diharapkan pengelolaan inventaris dalam organisasi dapat menjadi lebih efisien, terorganisir, serta mudah diakses oleh pengguna yang berwenang.
 
 ---
 
-# Struktur Folder
+# ꫂ❁ Fitur Aplikasi
 
-Project ini disusun dengan pendekatan feature-based agar pemisahan model, provider, service, page, dan widget tetap jelas.
+Di dalam aplikasi INFORSA, terdapat beberapa fitur utama yang dirancang untuk memudahkan manajemen aset secara digital. Fitur-fitur ini dibagi berdasarkan hak akses pengguna agar proses inventarisasi dan peminjaman berjalan lebih tertib:
+
+### **1. Login & Role**
+
+=> Terdapat Admin dan User biasa. Fitur ini membatasi hak akses pengguna berdasarkan peran mereka. Admin memiliki kontrol penuh terhadap manajemen aset, sementara User berfokus pada operasional peminjaman.
+
+### **2. Kelola Barang (Admin)**
+
+=> Pusat kontrol data aset di mana Admin dapat menambah, mengedit, atau menghapus barang. Fitur ini sudah dilengkapi dengan sinkronisasi ke Supabase Storage untuk menyimpan foto barang dan dokumen nota.
+
+### **3. Katalog (User)**
+
+=> Ruang bagi pengguna untuk mengeksplorasi inventaris yang tersedia. User dapat memantau stok secara real-time serta melihat spesifikasi dan kondisi aset sebelum memutuskan untuk meminjam.
+
+### **4. Pinjam Barang**
+
+=> Fitur utama yang memungkinkan User mengajukan permintaan peminjaman dengan lampiran foto kondisi awal. User juga dapat melakukan perpanjangan masa pinjam atau memulai proses pengembalian dengan mengunggah foto kondisi akhir.
+
+### **5. Approval (Admin)**
+
+=> Modul verifikasi bagi Admin untuk meninjau setiap pengajuan dari User. Admin dapat melihat detail alasan peminjaman dan bukti foto sebelum memberikan persetujuan atau penolakan.
+
+### **6. Notifikasi**
+
+=> Memberikan informasi instan kepada User mengenai perubahan status pengajuan mereka (Menunggu, Disetujui, atau Ditolak). Dashboard juga menampilkan pengingat otomatis jika aset sudah mendekati jatuh tempo (H-3).
+
+### **7. Profil**
+
+=> Tempat bagi pengguna untuk mengelola informasi pribadi, memantau riwayat aktivitas secara lengkap, serta akses cepat layanan bantuan melalui integrasi WhatsApp Admin.
+
+---
+
+# ꫂ❁ Struktur Folder
+
+Aplikasi ini disusun menggunakan pola Feature-based architecture agar setiap bagian kodingan tertata rapi sesuai fungsinya masing-masing. Hal ini memudahkan proses pengembangan dan perbaikan jika terjadi kendala pada fitur tertentu:
 
 ```text
 lib/
-|-- models/       # Struktur data utama
-|-- pages/        # Halaman UI admin, auth, dan user
-|-- providers/    # State management dan business logic
-|-- services/     # Integrasi Supabase
-|-- utils/        # Helper utilitas lintas platform
-|-- widgets/      # Reusable widgets
-`-- main.dart     # Entry point aplikasi
+├── models/         # Struktur data (ItemModel, UserModel, PeminjamanModel)
+├── pages/          # Folder utama yang menampung seluruh tampilan antarmuka (UI)
+│   ├── admin/      # Dashboard admin, kelola barang, approval
+│   ├── auth/       # Login & register
+│   └── user/       # Dashboard user, form pinjam, profil
+├── providers/      # Logika Bisnis & pengelolaan status (AuthProvider, InventoryProvider)
+├── services/       # Koneksi Supabase
+├── widgets/        # kumpulan komponen visual seperti header atau tombol yang didesain agar bisa digunakan berulang kali (InforsaHeader, AdminNavbar)
+└── main.dart       # File utama untuk menjalankan aplikasi.
 ```
 
 ---
@@ -89,16 +95,13 @@ Bagian ini diperbarui berdasarkan isi `pubspec.yaml` dan pemakaian aktual di fol
 - **`path_provider`** (^2.1.5) - Dipakai untuk menentukan lokasi penyimpanan file hasil ekspor di device non-web.
 - **`open_filex`** (^4.7.0) - Dipakai untuk membuka file hasil ekspor setelah berhasil dibuat.
 - **`flutter_test`** (SDK) - Dipakai pada `test/dashboard_test.dart` untuk unit test sederhana provider dashboard.
-
-## Package yang masih tercantum di `pubspec.yaml` tetapi belum terlihat dipakai langsung
-
-- **`cached_network_image`** (^3.3.1) - Belum ditemukan pemakaian; gambar remote saat ini masih menggunakan `Image.network`.
-- **`fl_chart`** (^1.2.0) - Belum ditemukan import atau widget chart yang aktif dipakai.
-- **`rxdart`** (^0.28.0) - Belum ditemukan pemakaian; debounce yang ada masih memakai `Timer` dari Dart.
-- **`cupertino_icons`** (^1.0.2) - Belum ditemukan pemanggilan `CupertinoIcons` pada source code saat ini.
-- **`mockito`** (^5.6.4) - Sudah terpasang di `dev_dependencies`, tetapi belum dipakai pada file test yang ada.
-- **`test`** (^1.26.3) - Sudah terpasang di `dev_dependencies`, tetapi pengujian saat ini memakai `flutter_test`.
 - **`flutter_lints`** (^6.0.0) - Dipakai sebagai aturan linting project, bukan package runtime aplikasi.
+- **`fl_chart**` digunakan untuk menampilkan grafik pada dashboard aplikasi.
+- **`cached_network_image**` digunakan untuk memuat dan menyimpan (cache) gambar barang dari internet.
+- **`rxdart**` digunakan untuk mengelola pembaruan data secara realtime.
+- **`cupertino_icons**` digunakan untuk menyediakan ikon pada antarmuka aplikasi.
+- **`mockito**` digunakan untuk membuat data simulasi saat pengujian.
+- **`test`** digunakan untuk melakukan unit testing pada aplikasi.
 
 ---
 
@@ -106,40 +109,51 @@ Bagian ini diperbarui berdasarkan isi `pubspec.yaml` dan pemakaian aktual di fol
 
 Berikut adalah widget Flutter yang benar-benar muncul di source code project ini, dikelompokkan berdasarkan perannya di UI.
 
-## 1. Struktur aplikasi dan navigasi
+## 1. Struktur Aplikasi & Navigasi
+- **MaterialApp** (root aplikasi dan pengaturan tema/routing).
+- **Scaffold**, **SafeArea**, **AppBar** (struktur dasar halaman dan header).
+- **DefaultTabController**, **TabBar**, **TabBarView** (navigasi berbasis tab).
+- **BottomNavigationBar**, **BottomNavigationBarItem** (navigasi menu bawah).
+- **Navigator**, **MaterialPageRoute** (perpindahan antar halaman).
 
-- `MaterialApp`, `Scaffold`, `SafeArea`, `AppBar`, `DefaultTabController`, `TabBar`, `TabBarView`
-- `BottomNavigationBar`, `BottomNavigationBarItem`, `Navigator`, `MaterialPageRoute`
+## 3. Layout & Pembungkus Konten
+- **Container**, **Padding**, **SizedBox** (pengaturan ukuran, jarak dalam, dan styling).
+- **Column**, **Row**, **Expanded**, **Center** (pengaturan layout vertikal dan horizontal).
+- **Stack**, **Positioned**, **Wrap** (layout fleksibel dan penumpukan widget).
+- **SingleChildScrollView**, **ListView.builder**, **ListView.separated** (konten yang dapat di-scroll).
+- **GridView.count**, **ExpansionTile** (tampilan grid dan list expandable).
+- **Margin** (jarak luar antar elemen, biasanya melalui **Container**).
+  
+## 4. Form & Interaksi
+- **TextField**, **TextFormField** (untuk form login, register, dan input data barang).
+- **DropdownButtonFormField**, **DropdownButton**, **DropdownMenuItem** (untuk memilih kategori seperti asal barang, kondisi, dll).
+- **ElevatedButton**, **OutlinedButton**, **TextButton** (untuk aksi utama dan sekunder).
+- **IconButton**, **GestureDetector**, **InkWell** (untuk interaksi berbasis tap/gesture).
+- **PopupMenuButton**, **PopupMenuItem** (untuk menu tambahan seperti edit/hapus).
+- **showDatePicker** (untuk memilih tanggal).
 
-## 2. Layout dan pembungkus konten
+## 5. Tampilan Data (Display)
+- **Text**, **Icon** (Material Icons & Cupertino).
+- **CircleAvatar**, **Badge** (untuk foto profil dan indikator notifikasi).
+- **Card**, **ListTile**, **Divider** (untuk menampilkan daftar item, aktivitas, dan riwayat).
+- **Image.asset**, **Image.network**, **CachedNetworkImage** (untuk menampilkan gambar lokal dan dari internet).
+- **DataTable2**, **DataColumn2**, **DataRow**, **DataCell** (untuk menampilkan data dalam bentuk tabel).
+- **RichText**, **TextSpan** (untuk teks dengan berbagai gaya dalam satu baris).
+  
+## 6. Feedback & Dialog
+- **AlertDialog**, **showDialog** (untuk konfirmasi aksi seperti hapus data).
+- **SnackBar** (untuk notifikasi sukses atau gagal).
+- **CircularProgressIndicator** (indikator loading saat proses data).
 
-- `Container`, `Padding`, `SizedBox`, `Column`, `Row`, `Expanded`, `Center`, `Stack`, `Positioned`, `Wrap`
-- `SingleChildScrollView`, `ListView.builder`, `ListView.separated`, `GridView.count`, `ExpansionTile`
+## 7. Responsive dan custom widget project
 
-## 3. Form dan interaksi pengguna
-
-- `TextField`, `TextFormField`, `DropdownButtonFormField`, `DropdownButton`, `DropdownMenuItem`
-- `PopupMenuButton`, `PopupMenuItem`, `IconButton`, `ElevatedButton`, `ElevatedButton.icon`
-- `OutlinedButton`, `OutlinedButton.icon`, `TextButton`, `GestureDetector`, `InkWell`, `showDatePicker`
-
-## 4. Penyajian data dan elemen visual
-
-- `Text`, `Icon`, `Image.asset`, `Image.network`, `CircleAvatar`, `Badge`
-- `DataTable2`, `DataColumn2`, `DataRow`, `DataCell`, `RichText`, `TextSpan`, `ListTile`
-
-## 5. Feedback dan dialog
-
-- `AlertDialog`, `showDialog`, `SnackBar`, `CircularProgressIndicator`
-
-## 6. Responsive dan custom widget project
-
-- **`ScreenTypeLayout.builder`** - Dipakai pada dashboard admin agar layout menyesuaikan ukuran layar
-- **`SplashScreen`** - Halaman awal untuk cek session dan menentukan routing awal pengguna
-- **`InforsaHeader`** - App bar reusable dengan logo dan indikator notifikasi
-- **`AdminNavbar`** - Bottom navigation khusus admin dengan badge approval
-- **`UserNavbar`** - Bottom navigation khusus user
-- **`FilterRowWidget`**, **`CustomDropdown`**, **`AdminPagination`**, **`AdminAssetCard`** - Widget bantu di halaman inventaris admin
-- **`AprPeminjamanTab`**, **`AprPerpanjanganTab`**, **`AprPengembalianTab`** - Widget tab approval admin untuk tiap jenis pengajuan
+- **`ScreenTypeLayout.builder`** (Dipakai pada dashboard admin agar layout menyesuaikan ukuran layar)
+- **`SplashScreen`** (Halaman awal untuk cek session dan menentukan routing awal pengguna)
+- **`InforsaHeader`** (App bar reusable dengan logo dan indikator notifikasi)
+- **`AdminNavbar`** (Bottom navigation khusus admin dengan badge approval)
+- **`UserNavbar`** (Bottom navigation khusus user)
+- **`FilterRowWidget`**, **`CustomDropdown`**, **`AdminPagination`**, **`AdminAssetCard`** (Widget bantu di halaman inventaris admin)
+- **`AprPeminjamanTab`**, **`AprPerpanjanganTab`**, **`AprPengembalianTab`** (Widget tab approval admin untuk tiap jenis pengajuan)
 
 ---
 
