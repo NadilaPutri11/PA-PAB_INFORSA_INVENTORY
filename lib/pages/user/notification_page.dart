@@ -15,7 +15,16 @@ class _NotificationPageState extends State<NotificationPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initData());
+  }
+
+  Future<void> _initData() async {
+    final userId = context.read<AuthProvider>().currentUser?.id;
+    if (userId != null) {
+      final notifProvider = context.read<NotificationProvider>();
+      await notifProvider.fetchNotifications(userId);
+      notifProvider.subscribeToNotifications(userId);
+    }
   }
 
   Future<void> _loadData() async {
@@ -35,7 +44,6 @@ class _NotificationPageState extends State<NotificationPage> {
     return '${diff.inDays} hari yang lalu';
   }
 
-  // Icon dan warna per tipe notifikasi
   IconData _getIcon(String? type) {
     switch (type) {
       case 'peminjaman':

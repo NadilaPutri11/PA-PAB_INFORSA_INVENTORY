@@ -18,6 +18,7 @@ class MainAdminPage extends StatefulWidget {
 
 class _MainAdminPageState extends State<MainAdminPage> {
   int _stackIndex = 0;
+  bool _isOpeningAddPage = false;
 
   final List<Widget> _pages = const [
     DashboardAdminPage(),
@@ -36,6 +37,8 @@ class _MainAdminPageState extends State<MainAdminPage> {
     // Fetch semua notifikasi + subscribe realtime tanpa filter userId
     notifProvider.fetchAllNotifications();
     notifProvider.subscribeAsAdmin();
+    // Cek jatuh tempo saat pertama kali buka
+    notifProvider.checkAndNotifyOverdue();
   }
 
   int _navbarToStackIndex(int navbarIndex) {
@@ -64,6 +67,14 @@ class _MainAdminPageState extends State<MainAdminPage> {
     }
   }
 
+  PageRoute<int> _buildAddItemRoute() {
+    return PageRouteBuilder<int>(
+      pageBuilder: (_, __, ___) => const AddItemPage(),
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+    );
+  }
+
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -86,7 +97,6 @@ class _MainAdminPageState extends State<MainAdminPage> {
 
     if (confirm != true || !mounted) return;
 
-    // Bersihkan notifikasi dan unsubscribe realtime sebelum logout
     context.read<NotificationProvider>().clearNotifications();
     await context.read<AuthProvider>().logout();
 
@@ -109,7 +119,15 @@ class _MainAdminPageState extends State<MainAdminPage> {
         backgroundColor: navyColor,
         elevation: 0,
         centerTitle: false,
-        leading: const Icon(Icons.inventory_2_outlined, color: Colors.white),
+        leadingWidth: 46,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12, top: 10, bottom: 10),
+          child: Image.asset(
+            'assets/logo_inforsa.png',
+            fit: BoxFit.contain,
+          ),
+        ),
+        titleSpacing: 4,
         title: const Text(
           'INFORSA',
           style: TextStyle(
@@ -161,7 +179,7 @@ class _MainAdminPageState extends State<MainAdminPage> {
                 ),
             ],
           ),
-          // Avatar dengan popup logout
+         
           PopupMenuButton<String>(
             offset: const Offset(0, 48),
             onSelected: (value) {
@@ -209,15 +227,14 @@ class _MainAdminPageState extends State<MainAdminPage> {
               padding: const EdgeInsets.only(right: 16, left: 4),
               child: CircleAvatar(
                 radius: 14,
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                child: Text(
-                  (user?.nama.isNotEmpty == true)
-                      ? user!.nama[0].toUpperCase()
-                      : 'A',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+                backgroundColor: Colors.white,
+                child: ClipOval(
+                  child: Padding(
+                    padding: const EdgeInsets.all(3),
+                    child: Image.asset(
+                      'assets/logo_inforsa.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
@@ -231,17 +248,34 @@ class _MainAdminPageState extends State<MainAdminPage> {
         currentIndex: _stackToNavbarIndex(_stackIndex),
         selectedItemColor: navyColor,
         unselectedItemColor: Colors.grey,
-        onTap: (navbarIndex) {
+        onTap: (navbarIndex) async {
           if (navbarIndex == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AddItemPage()),
-            );
-          } else {
-            setState(() {
-              _stackIndex = _navbarToStackIndex(navbarIndex);
-            });
+            if (_isOpeningAddPage || !mounted) return;
+
+            _isOpeningAddPage = true;
+            try {
+              final selectedNavbarIndex = await Navigator.push<int>(
+                context,
+                _buildAddItemRoute(),
+              );
+
+              if (!mounted) return;
+              if (selectedNavbarIndex != null && selectedNavbarIndex != 2) {
+                setState(() {
+                  _stackIndex = _navbarToStackIndex(selectedNavbarIndex);
+                });
+              }
+            } catch (e) {
+              debugPrint('Add Item navigation error: $e');
+            } finally {
+              _isOpeningAddPage = false;
+            }
+            return;
           }
+
+          setState(() {
+            _stackIndex = _navbarToStackIndex(navbarIndex);
+          });
         },
         items: const [
           BottomNavigationBarItem(

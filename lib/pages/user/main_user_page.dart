@@ -37,10 +37,8 @@ class _MainUserPageState extends State<MainUserPage> {
 
     final notifProvider = context.read<NotificationProvider>();
 
-    // Fetch notifikasi awal
     notifProvider.fetchNotifications(userId);
 
-    // Subscribe realtime — badge otomatis update kalau ada notif baru
     notifProvider.subscribeToNotifications(userId);
   }
 

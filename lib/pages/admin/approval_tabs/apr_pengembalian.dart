@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// FILE: lib/pages/admin/approval_tabs/apr_pengembalian.dart
-// FIX: Hapus initState fetch — data sudah di-fetch oleh ApprovalsAdminPage
-// ─────────────────────────────────────────────────────────────────────────────
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -10,7 +5,6 @@ import '../../../providers/approval_provider.dart';
 import '../../../models/pengembalian_model.dart';
 
 class AprPengembalianTab extends StatelessWidget {
-  // FIX: Terima callback refresh dari parent
   final Future<void> Function() onRefresh;
 
   const AprPengembalianTab({super.key, required this.onRefresh});
@@ -301,7 +295,6 @@ class AprPengembalianTab extends StatelessWidget {
             ],
           ),
 
-          // FIX: Tombol hanya muncul kalau masih pending
           if (isPending) ...[
             const SizedBox(height: 20),
             SizedBox(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/inventory_provider.dart';
 import '../../models/item_model.dart';
+import '../../services/supabase_service.dart';
 import '../../widgets/inforsa_header.dart';
 import 'forms/peminjaman_page.dart';
 
@@ -13,17 +14,114 @@ class InventoryUserPage extends StatefulWidget {
 }
 
 class _InventoryUserPageState extends State<InventoryUserPage> {
-  String _selectedCategory = 'Semua Aset';
+  String _selectedCategory = 'Semua';
   String _searchQuery = '';
   final _searchController = TextEditingController();
 
-  final List<String> _categories = ['Semua Aset', 'Perlengkapan', 'Peralatan'];
+  final List<String> _listPerlengkapan = [
+    'kertas',
+    'buku',
+    'karton',
+    'mika',
+    'origami',
+    'pulpen',
+    'pensil',
+    'spidol',
+    'map',
+    'amplop',
+    'label',
+    'tinta',
+    'stamp pad',
+    'isi staples',
+    'isi lem',
+    'lakban',
+    'selotip',
+    'double tape',
+    'tali',
+    'push pin',
+    'kantong',
+    'kue',
+    'kopi',
+    'teh',
+    'sendok',
+    'sedotan',
+    'tutup',
+    'tusuk',
+    'obat',
+    'promag',
+    'kasa',
+    'tape',
+    'oxycan',
+    'masker',
+    'moisturizer',
+    'pengharum',
+    'lap',
+    'kuas',
+    't-shirt',
+    'crocs',
+    'nametag',
+    'spanduk',
+    'balon',
+    'pita',
+    'bola',
+    'shuttlecock',
+    'kartu',
+    'baterai',
+    'lampu',
+    'cover',
+  ];
+
+  final List<String> _listPeralatan = [
+    'printer',
+    'kabel',
+    'converter',
+    'ht',
+    'toa',
+    'kipas',
+    'kompor',
+    'tensi',
+    'fingertip',
+    'staples',
+    'lem tembak',
+    'gunting',
+    'cutter',
+    'penggaris',
+    'stempel',
+    'dispenser',
+    'galon',
+    'termos',
+    'wajan',
+    'baki',
+    'botol',
+    'piring',
+    'jam',
+    'tempat sampah',
+    'stopkontak',
+    'kotak',
+    'pipa',
+    'helm',
+    'drum',
+    'figura',
+    'xbanner',
+    'sapu',
+    'sekop',
+    'serokan',
+    'scoreboard',
+    'jaring',
+    'catur',
+    'bendera',
+  ];
+
+  String _selectedStatus = 'Semua';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<InventoryProvider>().fetchItems();
+      final inventory = context.read<InventoryProvider>();
+      if (inventory.items.isEmpty) {
+        inventory.fetchItems();
+      }
     });
   }
 
@@ -42,10 +140,27 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
           _searchQuery.isEmpty ||
           item.namaBarang.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           item.kodeBarang.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchCategory =
-          _selectedCategory == 'Semua Aset' ||
-          item.kondisiBarang == _selectedCategory;
-      return matchSearch && matchCategory;
+
+      bool matchCategory = true;
+      if (_selectedCategory == 'Perlengkapan') {
+        matchCategory = _listPerlengkapan.any(
+          (p) => item.namaBarang.toLowerCase().contains(p.toLowerCase()),
+        );
+      } else if (_selectedCategory == 'Peralatan') {
+        matchCategory = _listPeralatan.any(
+          (p) => item.namaBarang.toLowerCase().contains(p.toLowerCase()),
+        );
+      }
+
+      bool matchStatus = true;
+      final isAvailable = item.kondisiBarang == 'Baik' && item.volume > 0;
+      if (_selectedStatus == 'Tersedia') {
+        matchStatus = isAvailable;
+      } else if (_selectedStatus == 'Tidak Tersedia') {
+        matchStatus = !isAvailable;
+      }
+
+      return matchSearch && matchCategory && matchStatus;
     }).toList();
 
     return Scaffold(
@@ -129,59 +244,8 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
               ),
               const SizedBox(height: 24),
 
-              // Category Chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: _categories.map((cat) {
-                    final isSelected = _selectedCategory == cat;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: Material(
-                        color: isSelected ? Colors.black : Colors.white,
-                        elevation: isSelected ? 8.0 : 2.0,
-                        shadowColor: isSelected
-                            ? Colors.black45
-                            : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(20),
-                        child: InkWell(
-                          onTap: () => setState(() => _selectedCategory = cat),
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              border: isSelected
-                                  ? null
-                                  : Border.all(color: Colors.grey[200]!),
-                            ),
-                            child: Text(
-                              cat,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.black87,
-                                fontSize: 13,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
               // List Aset
-              inventory.isLoading
+              inventory.isLoading && inventory.items.isEmpty
                   ? const Center(
                       child: Padding(
                         padding: EdgeInsets.all(48),
@@ -226,98 +290,167 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
   }
 
   void _showFilterSheet(BuildContext context) {
+    String tempCategory = _selectedCategory;
+    String tempStatus = _selectedStatus;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Filter Barang',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'KONDISI',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Filter Barang',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: ['Baik', 'Rusak'].map((k) {
-                  final isSelected = _selectedCategory == k;
-                  return Material(
-                    color: isSelected ? Colors.black : Colors.white,
-                    elevation: isSelected ? 8.0 : 2.0,
-                    shadowColor: isSelected ? Colors.black45 : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(20),
-                    child: InkWell(
+                const SizedBox(height: 20),
+                const Text(
+                  'KATEGORI',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: ['Semua', 'Perlengkapan', 'Peralatan'].map((cat) {
+                    final isSelected = tempCategory == cat;
+                    return _buildFilterChip(
+                      label: cat,
+                      isSelected: isSelected,
                       onTap: () {
-                        setState(() => _selectedCategory = k);
-                        Navigator.pop(context);
+                        setSheetState(() => tempCategory = cat);
                       },
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          border: isSelected
-                              ? null
-                              : Border.all(color: Colors.grey[200]!),
-                        ),
-                        child: Text(
-                          k,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black87,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.w600,
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'STATUS',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: ['Semua', 'Tersedia', 'Tidak Tersedia'].map((s) {
+                    final isSelected = tempStatus == s;
+                    return _buildFilterChip(
+                      label: s,
+                      isSelected: isSelected,
+                      onTap: () {
+                        setSheetState(() => tempStatus = s);
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setSheetState(() {
+                              tempCategory = 'Semua';
+                              tempStatus = 'Semua';
+                            });
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: Colors.grey[400]!),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Reset',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() => _selectedCategory = 'Semua Aset');
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedCategory = tempCategory;
+                              _selectedStatus = tempStatus;
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Terapkan Filter',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'Reset Filter',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: isSelected ? Colors.black : Colors.white,
+      elevation: isSelected ? 8.0 : 2.0,
+      shadowColor: isSelected ? Colors.black45 : Colors.grey[300],
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: isSelected ? null : Border.all(color: Colors.grey[200]!),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.black87,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -351,16 +484,7 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                 ),
-                child: Container(
-                  height: 180,
-                  width: double.infinity,
-                  color: Colors.grey[200],
-                  child: const Icon(
-                    Icons.inventory_2_outlined,
-                    size: 60,
-                    color: Colors.grey,
-                  ),
-                ),
+                child: _buildAssetImage(item),
               ),
               Positioned(
                 top: 12,
@@ -377,7 +501,7 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    isAvailable ? 'AVAILABLE' : 'UNAVAILABLE',
+                    isAvailable ? 'TERSEDIA' : 'TIDAK TERSEDIA',
                     style: TextStyle(
                       color: isAvailable
                           ? const Color(0xFF4ADE80)
@@ -431,15 +555,29 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
                     ),
                     isAvailable
                         ? InkWell(
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              final submitted = await Navigator.push<bool>(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => PeminjamanPage(
                                     item: item,
-                                  ), // HAPUS 'const' sebelum PeminjamanPage jika ada
+                                  ), 
                                 ),
                               );
+
+                              if (!context.mounted) return;
+
+                              if (submitted == true) {
+                                await context.read<InventoryProvider>().fetchItems();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Permohonan peminjaman berhasil dikirim'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              }
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -480,7 +618,7 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text(
-                              'Unavailable',
+                              'Tidak Tersedia',
                               style: TextStyle(
                                 color: Colors.black54,
                                 fontSize: 11,
@@ -495,6 +633,54 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
           ),
         ],
       ),
+    );
+  }
+
+  String? _resolveFotoUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.trim().isEmpty) return null;
+    final value = rawUrl.trim();
+
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+
+    final normalizedPath = value.startsWith('barang/') ? value : 'barang/$value';
+    return SupabaseService.storage.from('foto_barang').getPublicUrl(normalizedPath);
+  }
+
+  Widget _buildAssetImage(ItemModel item) {
+    final resolvedUrl = _resolveFotoUrl(item.fotoUrl);
+
+    if (resolvedUrl == null) {
+      return Container(
+        height: 180,
+        width: double.infinity,
+        color: Colors.grey[200],
+        child: const Icon(
+          Icons.inventory_2_outlined,
+          size: 60,
+          color: Colors.grey,
+        ),
+      );
+    }
+
+    return Image.network(
+      resolvedUrl,
+      height: 180,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) {
+        return Container(
+          height: 180,
+          width: double.infinity,
+          color: Colors.grey[200],
+          child: const Icon(
+            Icons.inventory_2_outlined,
+            size: 60,
+            color: Colors.grey,
+          ),
+        );
+      },
     );
   }
 }

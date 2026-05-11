@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// FILE: lib/pages/admin/approval_tabs/apr_perpanjangan.dart
-// FIX: Hapus initState fetch — data sudah di-fetch oleh ApprovalsAdminPage
-// ─────────────────────────────────────────────────────────────────────────────
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -10,7 +5,6 @@ import '../../../providers/approval_provider.dart';
 import '../../../models/perpanjangan_model.dart';
 
 class AprPerpanjanganTab extends StatelessWidget {
-  // FIX: Terima callback refresh dari parent
   final Future<void> Function() onRefresh;
 
   const AprPerpanjanganTab({super.key, required this.onRefresh});
@@ -63,7 +57,6 @@ class AprPerpanjanganTab extends StatelessWidget {
               ),
             )
           else
-            // FIX: Tampilkan semua tapi bedakan visual pending vs sudah diproses
             ...approval.perpanjangan.map(
               (p) => _buildCard(context, p, approval, fmt),
             ),
@@ -88,7 +81,6 @@ class AprPerpanjanganTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        // FIX: Beri visual berbeda untuk yang sudah diproses
         border: !isPending ? Border.all(color: Colors.grey.shade200) : null,
         boxShadow: isPending
             ? [
@@ -134,7 +126,7 @@ class AprPerpanjanganTab extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        // FIX: Tampilkan badge status
+                     
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -236,7 +228,6 @@ class AprPerpanjanganTab extends StatelessWidget {
             ],
           ),
 
-          // FIX: Tombol hanya muncul kalau masih pending
           if (isPending) ...[
             const SizedBox(height: 20),
             Row(
@@ -326,8 +317,7 @@ class AprPerpanjanganTab extends StatelessWidget {
     bool success = false;
 
     if (setujui) {
-      // Update status di tabel perpanjangan → 'disetujui'
-      // Update tanggal rencana kembali di tabel peminjaman sekaligus
+      
       success = await approval.updateStatusPerpanjangan(
         perpanjanganId: p.id,
         status: 'disetujui',
@@ -335,7 +325,7 @@ class AprPerpanjanganTab extends StatelessWidget {
         tanggalBaruKembali: p.tanggalJatuhTempoBaru,
       );
     } else {
-      // Update status di tabel perpanjangan → 'ditolak'
+     
       success = await approval.updateStatusPerpanjangan(
         perpanjanganId: p.id,
         status: 'ditolak',

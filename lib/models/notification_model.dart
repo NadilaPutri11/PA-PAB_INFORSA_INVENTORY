@@ -31,7 +31,6 @@ class NotificationModel {
     );
   }
 
-  // Dipakai di markAsRead & markAllAsRead agar tidak buat ulang objek manual
   NotificationModel copyWith({
     String? id,
     String? userId,

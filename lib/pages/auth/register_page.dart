@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 
@@ -12,7 +13,7 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _namaController = TextEditingController();
-  final _nimController = TextEditingController(); // Pastikan ada ini
+  final _nimController = TextEditingController();
   final _waController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -31,7 +32,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // ← Pakai _selectedDepartemen saja, hapus _departemenController
   String? _selectedDepartemen;
 
   static const List<String> _departments = [
@@ -45,8 +45,8 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void dispose() {
     _namaController.dispose();
-    _nimController.dispose(); // TAMBAHKAN INI
-    _waController.dispose(); // TAMBAHKAN INI
+    _nimController.dispose();
+    _waController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -62,23 +62,19 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     final authProvider = context.read<AuthProvider>();
-
-    // FIX: Tambahkan parameter nim dan noWhatsapp di sini
     final success = await authProvider.register(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
       nama: _namaController.text.trim(),
-      nim: _nimController.text.trim(), // Pastikan controller ini sudah dibuat
-      noWhatsapp: _waController.text
-          .trim(), // Pastikan controller ini sudah dibuat
+      nim: _nimController.text.trim(),
+      noWhatsapp: _waController.text.trim(),
       departemen: _selectedDepartemen!,
     );
 
     if (!mounted) return;
 
-    Navigator.pop(context);
-
     if (success) {
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Registrasi berhasil!'),
@@ -194,6 +190,37 @@ class _RegisterPageState extends State<RegisterPage> {
                   onChanged: (val) => setState(() => _selectedDepartemen = val),
                   validator: (val) =>
                       val == null ? 'Departemen tidak boleh kosong' : null,
+                ),
+                const SizedBox(height: 18),
+
+                // NIM / ID
+                _buildField(
+                  controller: _nimController,
+                  label: 'NIM / ID',
+                  hint: 'Masukkan NIM atau ID',
+                  icon: Icons.badge_outlined,
+                  primary: primary,
+                  validator: (v) =>
+                      v!.trim().isEmpty ? 'NIM / ID tidak boleh kosong' : null,
+                ),
+                const SizedBox(height: 18),
+
+                // Nomor WhatsApp
+                _buildField(
+                  controller: _waController,
+                  label: 'Nomor WhatsApp',
+                  hint: 'Contoh: 0812xxxxxxx',
+                  icon: Icons.phone_android_outlined,
+                  primary: primary,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (v) {
+                    final value = v?.trim() ?? '';
+                    if (value.isEmpty)
+                      return 'Nomor WhatsApp tidak boleh kosong';
+                    if (value.length < 10) return 'Nomor WhatsApp tidak valid';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 18),
 
@@ -327,6 +354,7 @@ class _RegisterPageState extends State<RegisterPage> {
     required IconData icon,
     required Color primary,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
     bool obscure = false,
     VoidCallback? onToggleObscure,
     String? Function(String?)? validator,
@@ -342,6 +370,7 @@ class _RegisterPageState extends State<RegisterPage> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           obscureText: obscure,
           decoration: InputDecoration(
             hintText: hint,

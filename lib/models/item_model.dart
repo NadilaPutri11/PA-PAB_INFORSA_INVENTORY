@@ -14,7 +14,6 @@ class ItemModel {
   final String? keteranganTambahan;
   final DateTime? tanggalPembukuan;
   final DateTime? createdAt;
-  // FIX: Tambah field foto barang
   final String? fotoUrl;
 
   ItemModel({

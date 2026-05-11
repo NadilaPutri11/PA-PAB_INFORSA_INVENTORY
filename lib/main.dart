@@ -17,7 +17,7 @@ Future<void> main() async {
 
   await initializeDateFormatting('id', null);
 
-  await dotenv.load(fileName: '.env');
+  await dotenv.load(fileName: 'assets/.env');
 
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
@@ -57,7 +57,6 @@ class MyApp extends StatelessWidget {
 }
 
 // ─── Splash Screen ────────────────────────────────────────────────────────────
-// Cek session aktif sebelum routing ke halaman yang tepat
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -73,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
-    // Tunggu sebentar agar provider siap
+
     await Future.delayed(const Duration(milliseconds: 300));
 
     if (!mounted) return;
@@ -84,6 +83,18 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (auth.isLoggedIn) {
+      if (auth.isAdmin) {
+       
+        try {
+          await Future.wait([
+            context.read<DashboardProvider>().fetchDashboardData(silent: true),
+            context.read<InventoryProvider>().fetchItems(),
+          ]);
+        } catch (_) {
+          
+        }
+      }
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -101,7 +112,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: Color(0xFF000080),
       body: Center(
         child: Column(
@@ -111,10 +122,17 @@ class _SplashScreenState extends State<SplashScreen> {
             CircleAvatar(
               radius: 40,
               backgroundColor: Colors.white,
-              child: Icon(
-                Icons.inventory_2_outlined,
-                color: Color(0xFF000080),
-                size: 40,
+              child: Padding(
+                padding: EdgeInsets.all(8),
+                child: Image.asset(
+                  'assets/logo_inforsa.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.shield_outlined,
+                    color: Colors.white,
+                    size: 44,
+                  ),
+                ),
               ),
             ),
             SizedBox(height: 24),

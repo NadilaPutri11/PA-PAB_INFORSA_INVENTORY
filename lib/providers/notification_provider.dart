@@ -19,7 +19,6 @@ class NotificationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Fetch untuk User (filter by userId) ────────────────────────────────────
   Future<void> fetchNotifications(String userId) async {
     _setLoading(true);
     try {
@@ -36,7 +35,6 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
-  // ── Fetch untuk Admin (semua notifikasi) ────────────────────────────────────
   Future<void> fetchAllNotifications() async {
     _setLoading(true);
     try {
@@ -53,7 +51,6 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
-  // ── Realtime untuk User (filter by userId) ──────────────────────────────────
   void subscribeToNotifications(String userId) {
     if (_subscribedUserId == userId && _channel != null) return;
     unsubscribe();
@@ -87,7 +84,6 @@ class NotificationProvider extends ChangeNotifier {
         });
   }
 
-  // ── Realtime untuk Admin (semua notifikasi tanpa filter) ────────────────────
   void subscribeAsAdmin() {
     if (_subscribedUserId == 'admin' && _channel != null) return;
     unsubscribe();
@@ -99,7 +95,7 @@ class NotificationProvider extends ChangeNotifier {
           event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'notifications',
-          // Tidak ada filter → listen semua INSERT di tabel notifications
+
           callback: (payload) {
             try {
               final newNotif = NotificationModel.fromMap(payload.newRecord);
@@ -117,7 +113,6 @@ class NotificationProvider extends ChangeNotifier {
         });
   }
 
-  // ── Unsubscribe ─────────────────────────────────────────────────────────────
   void unsubscribe() {
     if (_channel != null) {
       SupabaseService.client.removeChannel(_channel!);
@@ -127,7 +122,6 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
-  // ── Mark as Read ────────────────────────────────────────────────────────────
   Future<void> markAsRead(String notifId) async {
     try {
       await SupabaseService.table(
@@ -157,10 +151,8 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
-  // Khusus admin — tandai semua dibaca tanpa filter userId
   Future<void> markAllAsReadAdmin() async {
     try {
-      // Update semua notif yang belum dibaca
       final unreadIds = _notifications
           .where((n) => !n.isRead)
           .map((n) => n.id)
@@ -179,7 +171,42 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
-  // ── Cleanup ─────────────────────────────────────────────────────────────────
+  Future<void> checkAndNotifyOverdue() async {
+    try {
+      final now = DateTime.now();
+      final loansRes = await SupabaseService.table('peminjaman')
+          .select('*, users(nama), barang(nama_barang)')
+          .eq('status', 'disetujui')
+          .lt('rencana_kembali', now.toIso8601String());
+
+      for (var loan in (loansRes as List)) {
+        final userName = loan['users']['nama'];
+        final assetName = loan['barang']['nama_barang'];
+
+        final today = DateTime(now.year, now.month, now.day);
+        final existingNotif = await SupabaseService.table('notifications')
+            .select()
+            .eq('title', 'Jatuh Tempo!')
+          .ilike('message', '%$assetName%')
+            .gte('created_at', today.toIso8601String());
+
+        if ((existingNotif as List).isEmpty) {
+          await SupabaseService.table('notifications').insert({
+            'user_id': null,
+            'title': 'Jatuh Tempo!',
+            'message':
+                'Peminjaman $assetName oleh $userName telah melewati batas waktu.',
+            'type': 'peminjaman',
+            'is_read': false,
+          });
+          debugPrint('Notification created for overdue asset: $assetName');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checkAndNotifyOverdue: $e');
+    }
+  }
+
   void clearNotifications() {
     _notifications = [];
     unsubscribe();

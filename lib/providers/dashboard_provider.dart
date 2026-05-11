@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
 
 class DashboardMetrics {
   final int activeLoans;
   final int totalExtensions;
-  final double extensionTrend; // percentage change
-  final Map<String, int> transactionStatus; // status -> count
+  final double extensionTrend; 
+  final Map<String, int> transactionStatus;
   final List<DailyStats> usageStats;
 
   DashboardMetrics({
@@ -49,9 +50,10 @@ class ActiveLoanData {
   final String userName;
   final String userPhone;
   final String assetName;
-  final String type; // Pinjam or Perpanjang
+  final String type; 
+  final String status;
   final DateTime dueDate;
-  final bool isNearingDue; // < 3 days
+  final bool isNearingDue; 
 
   ActiveLoanData({
     required this.id,
@@ -59,6 +61,7 @@ class ActiveLoanData {
     required this.userPhone,
     required this.assetName,
     required this.type,
+    required this.status,
     required this.dueDate,
     required this.isNearingDue,
   });
@@ -71,12 +74,23 @@ class DashboardProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   Timer? _refreshTimer;
+  RealtimeChannel? _dashboardRealtimeChannel;
+  bool _isSilentRefreshing = false;
 
   DashboardMetrics? get metrics => _metrics;
   List<UserRegistrationData> get users => _users;
   List<ActiveLoanData> get activeLoans => _activeLoans;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  Map<String, dynamic> _toStringKeyMap(dynamic raw) {
+    if (raw is! Map) return <String, dynamic>{};
+    final map = <String, dynamic>{};
+    raw.forEach((key, value) {
+      map[key.toString()] = value;
+    });
+    return map;
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;
@@ -88,21 +102,86 @@ class DashboardProvider extends ChangeNotifier {
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       fetchDashboardData(silent: true);
     });
+
+    _startDashboardRealtime();
   }
 
   void stopRealtimeUpdates() {
     _refreshTimer?.cancel();
+
+    final channel = _dashboardRealtimeChannel;
+    if (channel != null) {
+      SupabaseService.client.removeChannel(channel);
+      _dashboardRealtimeChannel = null;
+    }
+  }
+
+  void _triggerSilentRefresh() {
+    if (_isSilentRefreshing) return;
+    _isSilentRefreshing = true;
+    fetchDashboardData(silent: true).whenComplete(() {
+      _isSilentRefreshing = false;
+    });
+  }
+
+  void _startDashboardRealtime() {
+    if (_dashboardRealtimeChannel != null) return;
+
+    _dashboardRealtimeChannel = SupabaseService.client
+        .channel('dashboard-realtime')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'peminjaman',
+          callback: (_) => _triggerSilentRefresh(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'peminjaman',
+          callback: (_) => _triggerSilentRefresh(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.delete,
+          schema: 'public',
+          table: 'peminjaman',
+          callback: (_) => _triggerSilentRefresh(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'perpanjangan',
+          callback: (_) => _triggerSilentRefresh(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'perpanjangan',
+          callback: (_) => _triggerSilentRefresh(),
+        )
+        .subscribe();
   }
 
   Future<void> fetchDashboardData({bool silent = false}) async {
     if (!silent) _setLoading(true);
     try {
-      // 1. Fetch Metrics
-      final activeLoansCount = await _fetchActiveLoansCount();
-      final extensionData = await _fetchExtensionStats();
-      final statusBreakdown = await _fetchStatusBreakdown();
-      final usageStats = await _fetchUsageStats();
+      final activeLoansFuture = _fetchActiveLoanData();
+      final usersFuture = _fetchUserRegistrationData();
+      final activeLoansCountFuture = _fetchActiveLoansCount();
+      final extensionDataFuture = _fetchExtensionStats();
+      final statusBreakdownFuture = _fetchStatusBreakdown();
+      final usageStatsFuture = _fetchUsageStats();
 
+      _activeLoans = await activeLoansFuture;
+      notifyListeners();
+
+      final users = await usersFuture;
+      final activeLoansCount = await activeLoansCountFuture;
+      final extensionData = await extensionDataFuture;
+      final statusBreakdown = await statusBreakdownFuture;
+      final usageStats = await usageStatsFuture;
+
+      _users = users;
       _metrics = DashboardMetrics(
         activeLoans: activeLoansCount,
         totalExtensions: extensionData['total'] as int,
@@ -110,12 +189,6 @@ class DashboardProvider extends ChangeNotifier {
         transactionStatus: statusBreakdown,
         usageStats: usageStats,
       );
-
-      // 2. Fetch User Registration Table Data
-      _users = await _fetchUserRegistrationData();
-
-      // 3. Fetch Active Loans for the Table
-      _activeLoans = await _fetchActiveLoanData();
 
       notifyListeners();
     } catch (e) {
@@ -144,7 +217,6 @@ class DashboardProvider extends ChangeNotifier {
 
     final total = (currentRes as List).length;
 
-    // Simple trend calculation (comparing to previous 30 days)
     final prevMonthStart = now.subtract(const Duration(days: 60));
     final prevRes = await SupabaseService.table('perpanjangan')
         .select('id')
@@ -197,7 +269,6 @@ class DashboardProvider extends ChangeNotifier {
   }
 
   Future<List<UserRegistrationData>> _fetchUserRegistrationData() async {
-    // Joining users and peminjaman would be better but let's do it simply
     final usersRes = await SupabaseService.table('users').select();
     final loansRes = await SupabaseService.table(
       'peminjaman',
@@ -213,10 +284,10 @@ class DashboardProvider extends ChangeNotifier {
       return UserRegistrationData(
         id: u['id'] ?? '',
         nama: u['nama'] ?? '',
-        email: u['email'] ?? 'N/A', // Assuming email is stored in users table
+        email: u['email'] ?? 'N/A', 
         tanggalRegistrasi:
             DateTime.tryParse(u['created_at'] ?? '') ?? DateTime.now(),
-        statusAkun: u['role'] ?? 'user',
+        statusAkun: 'user',
         totalPeminjaman: loanCounts[u['id']] ?? 0,
         noWhatsapp: u['no_whatsapp'],
       );
@@ -225,7 +296,11 @@ class DashboardProvider extends ChangeNotifier {
 
   Future<List<ActiveLoanData>> _fetchActiveLoanData() async {
     final loansRes = await SupabaseService.table('peminjaman')
-        .select('*, users(nama, no_whatsapp), barang(nama_barang)')
+        .select(
+          'id, user_id, barang_id, status, rencana_kembali, '
+          'users:users!peminjaman_user_id_fkey(nama, no_whatsapp), '
+          'barang:barang!peminjaman_barang_id_fkey(nama_barang)',
+        )
         .eq('status', 'disetujui');
 
     final extensionsRes = await SupabaseService.table(
@@ -236,20 +311,87 @@ class DashboardProvider extends ChangeNotifier {
         .map((e) => e['peminjaman_id'] as String)
         .toSet();
 
-    final now = DateTime.now();
+    final loans = loansRes as List;
 
-    return (loansRes as List).map((l) {
+    final missingUserIds = <String>{};
+    final missingItemIds = <String>{};
+
+    for (final l in loans) {
+      final joinedUser = _toStringKeyMap(l['users']);
+      final joinedItem = _toStringKeyMap(l['barang']);
+
+      final userId = l['user_id']?.toString();
+      final itemId = l['barang_id']?.toString();
+
+      if (joinedUser.isEmpty && userId != null && userId.isNotEmpty) {
+        missingUserIds.add(userId);
+      }
+      if (joinedItem.isEmpty && itemId != null && itemId.isNotEmpty) {
+        missingItemIds.add(itemId);
+      }
+    }
+
+    final Map<String, Map<String, dynamic>> usersById = {};
+    if (missingUserIds.isNotEmpty) {
+      final usersRes = await SupabaseService.table('users')
+          .select('id, nama, no_whatsapp')
+          .inFilter('id', missingUserIds.toList());
+      for (final raw in (usersRes as List)) {
+        final row = _toStringKeyMap(raw);
+        final id = row['id']?.toString();
+        if (id != null && id.isNotEmpty) {
+          usersById[id] = row;
+        }
+      }
+    }
+
+    final Map<String, Map<String, dynamic>> itemsById = {};
+    if (missingItemIds.isNotEmpty) {
+      final itemsRes = await SupabaseService.table('barang')
+          .select('id, nama_barang')
+          .inFilter('id', missingItemIds.toList());
+      for (final raw in (itemsRes as List)) {
+        final row = _toStringKeyMap(raw);
+        final id = row['id']?.toString();
+        if (id != null && id.isNotEmpty) {
+          itemsById[id] = row;
+        }
+      }
+    }
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    return loans.map((l) {
       final dueDate = DateTime.tryParse(l['rencana_kembali'] ?? '') ?? now;
-      final diff = dueDate.difference(now).inHours;
-      final isNearingDue =
-          diff > 0 && diff <= 72; // Less than 72 hours (3 days)
+      final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
+      final diffDays = dueDateOnly.difference(today).inDays;
+      final isNearingDue = diffDays >= 0 && diffDays < 3;
+
+      final userId = l['user_id'] as String?;
+      final itemId = l['barang_id'] as String?;
+        final joinedUser = _toStringKeyMap(l['users']);
+        final joinedItem = _toStringKeyMap(l['barang']);
+
+      final fallbackUser = userId != null ? usersById[userId] : null;
+      final fallbackItem = itemId != null ? itemsById[itemId] : null;
+
+        final userName = (joinedUser['nama'] ?? fallbackUser?['nama'] ?? 'Unknown')
+          .toString();
+        final userPhone =
+          (joinedUser['no_whatsapp'] ?? fallbackUser?['no_whatsapp'] ?? 'N/A')
+            .toString();
+        final assetName =
+          (joinedItem['nama_barang'] ?? fallbackItem?['nama_barang'] ?? 'Unknown')
+            .toString();
 
       return ActiveLoanData(
         id: l['id'] ?? '',
-        userName: l['users']?['nama'] ?? 'Unknown',
-        userPhone: l['users']?['no_whatsapp'] ?? 'N/A',
-        assetName: l['barang']?['nama_barang'] ?? 'Unknown',
+        userName: userName.toString().isNotEmpty ? userName.toString() : 'Unknown',
+        userPhone: userPhone.toString().isNotEmpty ? userPhone.toString() : 'N/A',
+        assetName: assetName.toString().isNotEmpty ? assetName.toString() : 'Unknown',
         type: extendedLoanIds.contains(l['id']) ? 'Perpanjang' : 'Pinjam',
+        status: (l['status'] ?? 'disetujui').toString(),
         dueDate: dueDate,
         isNearingDue: isNearingDue,
       );
@@ -258,7 +400,7 @@ class DashboardProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
+    stopRealtimeUpdates();
     super.dispose();
   }
 }

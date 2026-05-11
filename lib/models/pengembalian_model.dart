@@ -2,13 +2,11 @@ import 'peminjaman_model.dart';
 
 class PengembalianModel {
   final String id;
-  // FIX: Rename peminjamamId → peminjamanId
   final String peminjamanId;
   final DateTime? tanggalDikembalikan;
   final String? fotoKembaliDepanUrl;
   final String? fotoKembaliBelakangUrl;
   final String? catatanPengembalian;
-  // FIX: Tambah field status
   final String status;
   final DateTime? createdAt;
   final PeminjamanModel? peminjaman;
@@ -28,7 +26,6 @@ class PengembalianModel {
   factory PengembalianModel.fromMap(Map<String, dynamic> map) {
     return PengembalianModel(
       id: map['id'] ?? '',
-      // FIX: Rename peminjamamId → peminjamanId
       peminjamanId: map['peminjaman_id'] ?? '',
       tanggalDikembalikan: map['tanggal_dikembalikan'] != null
           ? DateTime.parse(map['tanggal_dikembalikan'])
@@ -36,7 +33,6 @@ class PengembalianModel {
       fotoKembaliDepanUrl: map['foto_kembali_depan_url'],
       fotoKembaliBelakangUrl: map['foto_kembali_belakang_url'],
       catatanPengembalian: map['catatan_pengembalian'],
-      // FIX: Parse status dari database
       status: map['status'] ?? 'menunggu_konfirmasi',
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'])
@@ -49,7 +45,6 @@ class PengembalianModel {
 
   Map<String, dynamic> toMap() {
     return {
-      // FIX: Rename peminjamamId → peminjamanId
       'peminjaman_id': peminjamanId,
       'tanggal_dikembalikan': tanggalDikembalikan?.toIso8601String(),
       'foto_kembali_depan_url': fotoKembaliDepanUrl,
@@ -59,7 +54,6 @@ class PengembalianModel {
     };
   }
 
-  // FIX: Tambah copyWith
   PengembalianModel copyWith({
     String? peminjamanId,
     DateTime? tanggalDikembalikan,

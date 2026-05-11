@@ -19,6 +19,7 @@ class ActivityPage extends StatefulWidget {
 class _ActivityPageState extends State<ActivityPage> {
   int _selectedFilterIndex = 0;
   final List<String> _filters = ['Peminjaman', 'Pengembalian', 'Perpanjangan'];
+  bool _isAdmin = false;
 
   @override
   void initState() {
@@ -27,9 +28,16 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
   Future<void> _loadData() async {
-    final userId = context.read<AuthProvider>().currentUser?.id;
-    if (userId != null) {
-      await context.read<ApprovalProvider>().fetchUserPeminjaman(userId);
+    final auth = context.read<AuthProvider>();
+    _isAdmin = auth.isAdmin;
+
+    if (_isAdmin) {
+      await context.read<ApprovalProvider>().fetchAllForAdmin();
+    } else {
+      final userId = auth.currentUser?.id;
+      if (userId != null) {
+        await context.read<ApprovalProvider>().fetchUserPeminjaman(userId);
+      }
     }
   }
 
@@ -39,7 +47,18 @@ class _ActivityPageState extends State<ActivityPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: const InforsaHeader(),
+      appBar: _isAdmin
+          ? AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: const Text('Detail Aktivitas Admin'),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF2B3674),
+              elevation: 0,
+            )
+          : const InforsaHeader(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -102,14 +121,18 @@ class _ActivityPageState extends State<ActivityPage> {
     }
   }
 
-  // ── Tab Peminjaman ──────────────────────────────────────────────────────────
   Widget _buildPeminjamanView(ApprovalProvider approval) {
-    final aktifList = approval.activePeminjaman;
+    final menungguList = approval.activePeminjaman
+        .where((p) => p.isMenunggu)
+        .toList();
+    final aktifList = approval.activePeminjaman
+        .where((p) => p.isDisetujui || p.isMenungguKonfirmasi)
+        .toList();
 
-    if (aktifList.isEmpty) {
+    if (aktifList.isEmpty && menungguList.isEmpty) {
       return _buildEmptyState(
         Icons.inventory_2_outlined,
-        'Tidak ada aset yang sedang dipinjam',
+        'Belum ada aktivitas peminjaman',
       );
     }
 
@@ -119,18 +142,27 @@ class _ActivityPageState extends State<ActivityPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader(
-            'Pinjaman Aktif (${aktifList.length.toString().padLeft(2, '0')})',
-          ),
-          const SizedBox(height: 16),
-          ...aktifList.map((p) => _buildPinjamanCard(p)),
+          if (menungguList.isNotEmpty) ...[
+            _buildSectionHeader(
+              'Menunggu Persetujuan (${menungguList.length.toString().padLeft(2, '0')})',
+            ),
+            const SizedBox(height: 16),
+            ...menungguList.map((p) => _buildMenungguCard(p)),
+            const SizedBox(height: 24),
+          ],
+          if (aktifList.isNotEmpty) ...[
+            _buildSectionHeader(
+              'Pinjaman Aktif (${aktifList.length.toString().padLeft(2, '0')})',
+            ),
+            const SizedBox(height: 16),
+            ...aktifList.map((p) => _buildPinjamanCard(p)),
+          ],
           const SizedBox(height: 80),
         ],
       ),
     );
   }
 
-  // ── Tab Pengembalian ────────────────────────────────────────────────────────
   Widget _buildPengembalianView(ApprovalProvider approval) {
     final menungguKonfirmasi = approval.peminjaman
         .where((p) => p.status == 'menunggu_konfirmasi')
@@ -168,7 +200,9 @@ class _ActivityPageState extends State<ActivityPage> {
   }
 
   Widget _buildPerpanjanganView(ApprovalProvider approval) {
-    final bisaDiperpanjang = approval.activePeminjaman;
+    final bisaDiperpanjang = approval.activePeminjaman
+        .where((p) => p.isDisetujui)
+        .toList();
 
     if (bisaDiperpanjang.isEmpty) {
       return _buildEmptyState(
@@ -188,7 +222,60 @@ class _ActivityPageState extends State<ActivityPage> {
     );
   }
 
-  // ── Card Builder Helpers (Sekarang di dalam Class State) ────────────────────
+  Widget _buildMenungguCard(PeminjamanModel p) {
+    final fmt = DateFormat('dd MMM yyyy', 'id');
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF1D4ED8).withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: const Color(0xFFDBEAFE),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.schedule, color: Color(0xFF1D4ED8), size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'MENUNGGU APPROVAL ADMIN',
+                  style: TextStyle(
+                    color: Color(0xFF1D4ED8),
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  p.namaBarang ?? '-',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  '${fmt.format(p.tanggalPinjam)} — ${fmt.format(p.rencanakembali)}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildKonfirmasiCard(PeminjamanModel p) {
     return Container(

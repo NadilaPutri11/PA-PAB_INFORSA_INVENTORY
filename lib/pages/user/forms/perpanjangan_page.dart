@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../providers/approval_provider.dart';
 import '../../../models/peminjaman_model.dart';
-// FIX: Hapus import user_navbar yang tidak relevan di halaman form
 
 class PerpanjanganPage extends StatefulWidget {
   final PeminjamanModel peminjaman;
@@ -17,6 +16,26 @@ class PerpanjanganPage extends StatefulWidget {
 class _PerpanjanganPageState extends State<PerpanjanganPage> {
   DateTime? _newDueDate;
   final _alasanController = TextEditingController();
+  int _extensionCount = 0;
+  bool _isCheckingCount = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExtensionCount();
+  }
+
+  Future<void> _fetchExtensionCount() async {
+    final count = await context
+        .read<ApprovalProvider>()
+        .getExtensionCount(widget.peminjaman.id);
+    if (mounted) {
+      setState(() {
+        _extensionCount = count;
+        _isCheckingCount = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -25,6 +44,24 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    // Validasi 1: Masih dalam rentang peminjaman
+    if (DateTime.now().isAfter(widget.peminjaman.rencanakembali)) {
+      _showSnackBar(
+        'Batas waktu peminjaman telah habis. Anda tidak dapat melakukan perpanjangan.',
+        isError: true,
+      );
+      return;
+    }
+
+    // Validasi 2: Maksimal 2 kali perpanjangan
+    if (_extensionCount >= 2) {
+      _showSnackBar(
+        'Batas maksimal perpanjangan (2 kali) telah tercapai.',
+        isError: true,
+      );
+      return;
+    }
+
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: widget.peminjaman.rencanakembali.add(
@@ -39,6 +76,33 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
   }
 
   Future<void> _handleSubmit() async {
+    if (_isCheckingCount) return;
+
+    // Validasi ulang sebelum submit
+    if (DateTime.now().isAfter(widget.peminjaman.rencanakembali)) {
+      _showSnackBar(
+        'Batas waktu peminjaman telah habis.',
+        isError: true,
+      );
+      return;
+    }
+
+    if (_extensionCount >= 2) {
+      _showSnackBar(
+        'Batas maksimal perpanjangan telah tercapai.',
+        isError: true,
+      );
+      return;
+    }
+
+    if (widget.peminjaman.status == 'menunggu_konfirmasi') {
+      _showSnackBar(
+        'Masih ada permintaan yang sedang diproses oleh admin.',
+        isError: true,
+      );
+      return;
+    }
+
     if (_newDueDate == null) {
       _showSnackBar('Pilih tanggal jatuh tempo baru', isError: true);
       return;
@@ -49,7 +113,6 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
       return;
     }
 
-    // FIX: Rename peminjamamId → peminjamanId
     final success = await context.read<ApprovalProvider>().submitPerpanjangan(
       peminjamanId: widget.peminjaman.id,
       tanggalBaru: _newDueDate!,
@@ -62,7 +125,11 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
       _showSnackBar('Perpanjangan berhasil diajukan!');
       Navigator.pop(context, true);
     } else {
-      _showSnackBar('Gagal mengajukan perpanjangan', isError: true);
+      _showSnackBar(
+        context.read<ApprovalProvider>().errorMessage ??
+            'Gagal mengajukan perpanjangan',
+        isError: true,
+      );
     }
   }
 
@@ -77,8 +144,6 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
     );
   }
 
-  // ... bagian import tetap sama seperti file asli
-
   @override
   Widget build(BuildContext context) {
     final approval = context.watch<ApprovalProvider>();
@@ -90,7 +155,6 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        // FIX: Menambahkan leading icon untuk kembali ke halaman sebelumnya
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
@@ -120,7 +184,6 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
         ],
       ),
 
-      // FIX: Hapus UserNavbar — tidak relevan di halaman form terpisah
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
         child: Column(
@@ -202,6 +265,12 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
                     _buildDateBox(
                       'JATUH TEMPO SAAT INI',
                       fmt.format(p.rencanakembali),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDateBox(
+                      'JUMLAH PERPANJANGAN',
+                      '$_extensionCount / 2 kali',
+                      color: _extensionCount >= 2 ? Colors.red : Colors.green,
                     ),
                   ],
                 ),
@@ -421,7 +490,7 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
     );
   }
 
-  Widget _buildDateBox(String label, String date) {
+  Widget _buildDateBox(String label, String date, {Color? color}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -430,10 +499,10 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.calendar_month_outlined,
             size: 20,
-            color: Colors.black87,
+            color: color ?? Colors.black87,
           ),
           const SizedBox(width: 12),
           Column(
@@ -450,10 +519,10 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
               const SizedBox(height: 2),
               Text(
                 date,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: color ?? Colors.black87,
                 ),
               ),
             ],

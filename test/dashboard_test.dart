@@ -43,6 +43,7 @@ void main() {
         userPhone: '0812',
         assetName: 'Asset 1',
         type: 'Pinjam',
+        status: 'disetujui',
         dueDate: nearDue,
         isNearingDue: true, // This would be calculated in the provider
       );
@@ -53,6 +54,7 @@ void main() {
         userPhone: '0813',
         assetName: 'Asset 2',
         type: 'Pinjam',
+        status: 'disetujui',
         dueDate: notNearDue,
         isNearingDue: false,
       );

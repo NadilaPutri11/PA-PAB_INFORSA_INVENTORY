@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart'; // FIX: Tambah import untuk inputFormatters (Anti Huruf)
+import 'package:flutter/services.dart'; 
 import 'package:file_picker/file_picker.dart';
 import '../../providers/inventory_provider.dart';
 import '../../models/item_model.dart';
@@ -32,6 +32,7 @@ class _AddItemPageState extends State<AddItemPage> {
   String _satuan = 'Pcs';
   String _kondisi = 'Baik';
   bool _isUploading = false;
+  bool _isNavigatingBack = false;
 
   static const List<String> _satuanOptions = [
     'Pcs',
@@ -42,11 +43,9 @@ class _AddItemPageState extends State<AddItemPage> {
   ];
   static const List<String> _kondisiOptions = ['Baik', 'Rusak'];
 
-  // State foto barang
   Uint8List? _fotoBytes;
   String? _fotoEkstension;
 
-  // State dokumen nota
   Uint8List? _dokumenBytes;
   String? _dokumenNama;
   String? _dokumenEkstension;
@@ -64,7 +63,6 @@ class _AddItemPageState extends State<AddItemPage> {
     super.dispose();
   }
 
-  // ── Foto Barang ─────────────────────────────────────────────────────────────
   Future<void> _pickFotoBarang() async {
     final result = await FilePicker.pickFiles(
       type: FileType.image,
@@ -78,7 +76,6 @@ class _AddItemPageState extends State<AddItemPage> {
     }
   }
 
-  // ── Dokumen Nota ─────────────────────────────────────────────────────────────
   Future<void> _pickDokumen() async {
     final result = await FilePicker.pickFiles(
       type: FileType.custom,
@@ -109,10 +106,32 @@ class _AddItemPageState extends State<AddItemPage> {
     }
   }
 
+  void _resetForm() {
+    _formKey.currentState?.reset();
+    setState(() {
+      _kodeBarangController.clear();
+      _namaBarangController.clear();
+      _volumeController.clear();
+      _spesifikasiController.clear();
+      _tahunController.clear();
+      _hargaController.clear();
+      _keteranganController.clear();
+      _tanggalPembukuan = DateTime.now();
+      _tanggalController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+      _asalBarang = 'Beli';
+      _satuan = 'Pcs';
+      _kondisi = 'Baik';
+      _fotoBytes = null;
+      _fotoEkstension = null;
+      _dokumenBytes = null;
+      _dokumenNama = null;
+      _dokumenEkstension = null;
+    });
+  }
+
   Future<void> _handleSimpan() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Validasi volume > 0
     final vol = int.tryParse(_volumeController.text.trim()) ?? 0;
     if (vol <= 0) {
       _showSnackBar('Volume harus lebih dari 0', isError: true);
@@ -124,7 +143,6 @@ class _AddItemPageState extends State<AddItemPage> {
     final provider = context.read<InventoryProvider>();
     final kode = _kodeBarangController.text.trim();
 
-    // Upload foto barang kalau ada
     String? fotoUrl;
     if (_fotoBytes != null) {
       fotoUrl = await provider.uploadFotoBarang(
@@ -139,7 +157,6 @@ class _AddItemPageState extends State<AddItemPage> {
       }
     }
 
-    // Upload dokumen nota kalau ada dan jika Asal = Beli
     String? dokumenUrl;
     if (_asalBarang == 'Beli' && _dokumenBytes != null) {
       dokumenUrl = await provider.uploadDokumenNota(
@@ -154,7 +171,6 @@ class _AddItemPageState extends State<AddItemPage> {
       }
     }
 
-    // FIX: Hanya proses Harga, Tahun, dan Keterangan jika statusnya Beli
     final int? finalTahun = _asalBarang == 'Beli'
         ? int.tryParse(_tahunController.text.trim())
         : null;
@@ -176,7 +192,7 @@ class _AddItemPageState extends State<AddItemPage> {
       kodeBarang: kode,
       namaBarang: _namaBarangController.text.trim(),
       volume: vol,
-      tersedia: vol, // FIX: Initialize available count to total volume
+      tersedia: vol, 
       satuan: _satuan,
       asalBarang: _asalBarang,
       kondisiBarang: _kondisi,
@@ -191,16 +207,42 @@ class _AddItemPageState extends State<AddItemPage> {
       fotoUrl: fotoUrl,
     );
 
-
     final success = await provider.addItem(item);
     if (!mounted) return;
     setState(() => _isUploading = false);
 
     if (success) {
-      _showSnackBar('Barang berhasil ditambahkan!');
-      Navigator.pop(context, true);
+      if (mounted) {
+        _showSnackBar('Barang berhasil ditambahkan!');
+        _resetForm();
+      }
     } else {
-      _showSnackBar('Gagal menambahkan barang', isError: true);
+      if (mounted) {
+        _showSnackBar(
+          provider.errorMessage ?? 'Gagal menambahkan barang',
+          isError: true,
+        );
+      }
+    }
+  }
+
+  Future<void> _navigateBackToMain({int? navbarIndex}) async {
+    if (_isNavigatingBack) return;
+    _isNavigatingBack = true;
+
+    try {
+      if (!mounted) return;
+      final nav = Navigator.of(context);
+
+      if (nav.canPop()) {
+        await nav.maybePop(navbarIndex);
+      }
+    } catch (e) {
+      debugPrint('AddItemPage back navigation error: $e');
+    } finally {
+      if (mounted) {
+        _isNavigatingBack = false;
+      }
     }
   }
 
@@ -227,7 +269,7 @@ class _AddItemPageState extends State<AddItemPage> {
         backgroundColor: navyColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => _navigateBackToMain(),
         ),
         title: const Text(
           'Tambah Barang',
@@ -266,7 +308,6 @@ class _AddItemPageState extends State<AddItemPage> {
               ),
               const SizedBox(height: 32),
 
-              // ── FOTO BARANG ──────────────────────────────────────────────
               _buildSectionTitle('FOTO BARANG'),
               GestureDetector(
                 onTap: _pickFotoBarang,
@@ -342,7 +383,6 @@ class _AddItemPageState extends State<AddItemPage> {
               ),
               const SizedBox(height: 32),
 
-              // ── INFORMASI WAJIB ──────────────────────────────────────────
               _buildSectionTitle('INFORMASI WAJIB'),
               _buildLabel('TANGGAL PEMBUKUAN'),
               GestureDetector(
@@ -420,7 +460,7 @@ class _AddItemPageState extends State<AddItemPage> {
               ),
 
               const SizedBox(height: 32),
-              // ── OPSIONAL ─────────────────────────────────────────────────
+
               _buildSectionTitle('OPSIONAL / TAMBAHAN'),
               _buildLabel('SPESIFIKASI BARANG'),
               _buildTextField(
@@ -430,9 +470,6 @@ class _AddItemPageState extends State<AddItemPage> {
               ),
               const SizedBox(height: 24),
 
-              // =========================================================
-              // LOGIKA CONDITIONAL: HANYA MUNCUL JIKA "BELI" DIPILIH
-              // =========================================================
               if (_asalBarang == 'Beli') ...[
                 _buildSectionTitle('DETAIL PEMBELIAN & KETERANGAN'),
 
@@ -444,7 +481,7 @@ class _AddItemPageState extends State<AddItemPage> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                  ], // FIX: Hanya Angka
+                  ], 
                   validator: (v) {
                     if (v == null || v.isEmpty) {
                       return 'Tahun wajib diisi untuk barang beli';
@@ -462,7 +499,9 @@ class _AddItemPageState extends State<AddItemPage> {
                   decoration: BoxDecoration(
                     color: Colors.blue.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,7 +533,7 @@ class _AddItemPageState extends State<AddItemPage> {
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
-                        ], // FIX: Mencegah Huruf
+                        ], 
                         isFilled: false,
                         validator: (v) {
                           if (v == null || v.isEmpty) {
@@ -519,7 +558,6 @@ class _AddItemPageState extends State<AddItemPage> {
                 ),
               ],
 
-              // =========================================================
               const SizedBox(height: 40),
 
               SizedBox(
@@ -559,10 +597,36 @@ class _AddItemPageState extends State<AddItemPage> {
           ),
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: 2,
+        selectedItemColor: navyColor,
+        unselectedItemColor: Colors.grey,
+        onTap: (navbarIndex) {
+          if (navbarIndex == 2) return;
+          _navigateBackToMain(navbarIndex: navbarIndex);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.grid_view_rounded),
+            label: 'DASHBOARD',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.inventory_2_outlined),
+            label: 'INVENTORY',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline, size: 32),
+            label: 'ADD',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fact_check_outlined),
+            label: 'APPROVALS',
+          ),
+        ],
+      ),
     );
   }
-
-  // ── Widget Helpers ──────────────────────────────────────────────────────────
 
   Widget _buildUploadDokumenBox() {
     if (_dokumenBytes != null) {
@@ -687,7 +751,6 @@ class _AddItemPageState extends State<AddItemPage> {
     );
   }
 
-  // FIX: Tambah parameter inputFormatters
   Widget _buildTextField({
     String? hint,
     IconData? icon,
@@ -710,7 +773,7 @@ class _AddItemPageState extends State<AddItemPage> {
         maxLines: maxLines,
         enabled: enabled,
         keyboardType: keyboardType,
-        inputFormatters: inputFormatters, // Diaktifkan disini
+        inputFormatters: inputFormatters, 
         decoration: InputDecoration(
           hintText: hint,
           prefixText: prefixText,

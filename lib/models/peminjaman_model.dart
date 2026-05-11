@@ -8,14 +8,13 @@ class PeminjamanModel {
   final String? fotoSebelumPinjamUrl;
   final String status;
   final DateTime? createdAt;
-  // FIX: Tambahkan baris ini
   final DateTime? updatedAt;
 
-  // Data join
   final String? namaBarang;
   final String? kodeBarang;
   final String? namaUser;
   final String? departemenUser;
+  final String? noWhatsappUser;
 
   PeminjamanModel({
     required this.id,
@@ -27,12 +26,12 @@ class PeminjamanModel {
     this.fotoSebelumPinjamUrl,
     required this.status,
     this.createdAt,
-    // FIX: Tambahkan di constructor
     this.updatedAt,
     this.namaBarang,
     this.kodeBarang,
     this.namaUser,
     this.departemenUser,
+    this.noWhatsappUser,
   });
 
   bool get isMenunggu => status == 'menunggu';
@@ -63,7 +62,6 @@ class PeminjamanModel {
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'])
           : null,
-      // FIX: Tambahkan parsing dari database (Supabase otomatis pakai nama updated_at)
       updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'])
           : null,
@@ -71,6 +69,7 @@ class PeminjamanModel {
       kodeBarang: map['barang'] != null ? map['barang']['kode_barang'] : null,
       namaUser: map['users'] != null ? map['users']['nama'] : null,
       departemenUser: map['users'] != null ? map['users']['departemen'] : null,
+      noWhatsappUser: map['users'] != null ? map['users']['no_whatsapp'] : null,
     );
   }
 

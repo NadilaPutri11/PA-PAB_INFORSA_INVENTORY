@@ -18,14 +18,28 @@ class ApprovalsAdminPage extends StatefulWidget {
 }
 
 class _ApprovalsAdminPageState extends State<ApprovalsAdminPage> {
+  ApprovalProvider? _approvalProvider;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadAll());
+    _approvalProvider = context.read<ApprovalProvider>();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadAll();
+      if (!mounted) return;
+      await _approvalProvider?.startAdminApprovalRealtime();
+    });
+  }
+
+  @override
+  void dispose() {
+    _approvalProvider?.stopAdminApprovalRealtime();
+    super.dispose();
   }
 
   Future<void> _loadAll() async {
-    await context.read<ApprovalProvider>().fetchAllForAdmin();
+    await (_approvalProvider ?? context.read<ApprovalProvider>())
+        .fetchAllForAdmin();
   }
 
   @override
@@ -43,6 +57,8 @@ class _ApprovalsAdminPageState extends State<ApprovalsAdminPage> {
               color: Colors.white,
               width: double.infinity,
               child: TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
                 indicatorColor: navyColor,
                 indicatorWeight: 3,
                 labelColor: navyColor,
@@ -74,7 +90,7 @@ class _ApprovalsAdminPageState extends State<ApprovalsAdminPage> {
               child: approval.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : TabBarView(
-                      // FIX: Pass callback refresh ke setiap tab
+                      
                       children: [
                         AprPeminjamanTab(onRefresh: _loadAll),
                         AprPerpanjanganTab(onRefresh: _loadAll),

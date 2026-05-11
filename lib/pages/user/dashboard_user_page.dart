@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '../../widgets/inforsa_header.dart';
 import '../../providers/approval_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/peminjaman_model.dart';
 import 'detail_item_page.dart';
-
 import 'forms/perpanjangan_page.dart';
-import 'activity_page.dart';
 
 class DashboardUserPage extends StatefulWidget {
   const DashboardUserPage({super.key});
@@ -20,6 +19,8 @@ class DashboardUserPage extends StatefulWidget {
 class _DashboardUserPageState extends State<DashboardUserPage> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+
+  bool _showAllHistory = false;
 
   @override
   void initState() {
@@ -52,18 +53,15 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
     final menunggu = approval.peminjaman.where((p) => p.isMenunggu).toList();
     final terlambat = approval.terlambat;
 
-    // FIX: Hanya tampilkan peminjaman yang masih aktif/menunggu/menunggu konfirmasi
-    // Selesai dan ditolak tidak perlu muncul di dashboard
     final peminjamanAktif = approval.peminjaman
         .where(
           (p) =>
-              p.isDisetujui ||
-              p.isMenunggu ||
-              p.status == 'menunggu_konfirmasi',
+              p.status == 'disetujui' &&
+              DateTime.now().isBefore(p.rencanakembali),
         )
         .toList();
 
-    // FIX: Filter search
+    // Filter search
     final filtered = _searchQuery.isEmpty
         ? peminjamanAktif
         : peminjamanAktif
@@ -207,7 +205,7 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
               ),
               const SizedBox(height: 16),
 
-              // Summary cards — Menunggu & Jatuh Tempo (grid 2 kolom)
+              // Summary cards — Menunggu & Jatuh Tempo 
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -369,80 +367,36 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Peminjaman Saat\nIni',
+                    'Peminjaman Saat Ini',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                      height: 1.2,
-                    ),
-                  ),
-                  // FIX: Lihat Semua History sekarang bisa di-tap
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ActivityPage()),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          'Lihat Semua\nHistory',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.arrow_forward,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                      ],
+                      color: Color(0xFF2B3674),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
 
-              // FIX: List hanya tampilkan yang aktif/menunggu/menunggu konfirmasi
-              approval.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : filtered.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 60,
-                              color: Colors.grey[300],
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              _searchQuery.isNotEmpty
-                                  ? 'Tidak ada hasil untuk "$_searchQuery"'
-                                  : 'Tidak ada peminjaman aktif',
-                              style: TextStyle(color: Colors.grey[500]),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+              // Tabel Peminjaman Aktif (Redesign)
+              _buildPeminjamanTable(filtered),
+
+              if (!_showAllHistory && filtered.length > 5)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Center(
+                    child: TextButton(
+                      onPressed: () => setState(() => _showAllHistory = true),
+                      child: const Text(
+                        'Tampilkan Lebih Banyak',
+                        style: TextStyle(
+                          color: Color(0xFF4318FF),
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    )
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        final p = filtered[index];
-                        return _buildAssetCard(context, p);
-                      },
                     ),
+                  ),
+                ),
 
               const SizedBox(height: 80),
             ],
@@ -452,20 +406,45 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
     );
   }
 
-  Widget _buildAssetCard(BuildContext context, PeminjamanModel p) {
-    final isAktif = p.isDisetujui;
-    final isMenunggu = p.isMenunggu;
-    final isMenungguKonfirmasi = p.status == 'menunggu_konfirmasi';
+  Widget _buildPeminjamanTable(List<PeminjamanModel> allData) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+
+    // Filter: < 3 hari sebelum jatuh tempo jika tidak show all
+    final now = DateTime.now();
+    List<PeminjamanModel> displayData = allData;
+
+    if (!_showAllHistory) {
+      displayData = allData.where((p) {
+        final daysLeft = p.rencanakembali.difference(now).inDays;
+        return daysLeft < 3;
+      }).toList();
+
+      if (displayData.length > 5) {
+        displayData = displayData.take(5).toList();
+      }
+    } else {
+      // Saat Tampilkan Lebih Banyak, tampilkan seluruh barang yang pernah dipinjam user
+      final approval = context.watch<ApprovalProvider>();
+      displayData = approval.peminjaman;
+    }
+
+    if (displayData.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(child: Text('Tidak ada data peminjaman')),
+      );
+    }
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: isAktif
-            ? const Border(left: BorderSide(color: Color(0xFF0052CC), width: 4))
-            : isMenungguKonfirmasi
-            ? const Border(left: BorderSide(color: Color(0xFF15803D), width: 4))
-            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -474,161 +453,93 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.inventory_2_outlined,
-                color: Colors.grey,
-                size: 32,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: SizedBox(
+        height: ((displayData.length + 1) * 56.0).clamp(180.0, 420.0),
+        child: DataTable2(
+          columnSpacing: 12,
+          horizontalMargin: 12,
+          minWidth: 500,
+          columns: const [
+            DataColumn2(label: Text('BARANG'), size: ColumnSize.L),
+            DataColumn2(label: Text('TIPE'), size: ColumnSize.S),
+            DataColumn2(label: Text('<3 HARI'), size: ColumnSize.M),
+            DataColumn2(label: Text('AKSI'), size: ColumnSize.S),
+          ],
+          rows: displayData.map((p) {
+            final isPerpanjangan = p.status == 'menunggu_konfirmasi';
+            return DataRow(
+              cells: [
+                DataCell(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Expanded(
-                        child: Text(
-                          p.namaBarang ?? '-',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                            height: 1.2,
-                          ),
+                      Text(
+                        p.namaBarang ?? '-',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2B3674),
                         ),
                       ),
-                      // FIX: Badge handle semua status
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isAktif
-                              ? const Color(0xFFE6F4EA)
-                              : isMenungguKonfirmasi
-                              ? const Color(0xFFDCFCE7)
-                              : const Color(0xFFFEF3C7),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          isAktif
-                              ? 'AKTIF'
-                              : isMenungguKonfirmasi
-                              ? 'DIKEMBALIKAN'
-                              : 'MENUNGGU',
-                          style: TextStyle(
-                            color: isAktif
-                                ? const Color(0xFF1E8E3E)
-                                : isMenungguKonfirmasi
-                                ? const Color(0xFF15803D)
-                                : const Color(0xFFD97706),
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      Text(
+                        '${user?.nama} | ${user?.noWhatsapp}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFFA3AED0),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Asset ID: ${p.kodeBarang ?? '-'}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[900]),
+                ),
+                DataCell(
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4F7FE),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      isPerpanjangan ? 'Perpanjang' : 'Pinjam',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFA3AED0),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // Bottom row
-                  if (isAktif)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'BATAS\nKEMBALI',
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black54,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              DateFormat(
-                                'd MMM\nyyyy',
-                                'id',
-                              ).format(p.rencanakembali),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
+                ),
+                DataCell(
+                  Text(
+                    DateFormat('dd Okt yyyy', 'id').format(p.rencanakembali),
+                    style: const TextStyle(
+                      color: Color(0xFF2B3674),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                DataCell(
+                  IconButton(
+                    icon: const Icon(Icons.history_outlined, size: 20),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PerpanjanganPage(peminjaman: p),
                         ),
-                        GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  PerpanjanganPage(peminjaman: p),
-                            ),
-                          ),
-                          child: const Text(
-                            'Minta\nPerpanjangan',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0052CC),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                  if (isMenunggu)
-                    const Text(
-                      'Menunggu persetujuan admin...',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        color: Colors.grey,
-                        height: 1.3,
-                      ),
-                    ),
-
-                  // FIX: Tambah info untuk status menunggu_konfirmasi
-                  if (isMenungguKonfirmasi)
-                    const Text(
-                      'Pengembalian sedang diverifikasi admin...',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        color: Color(0xFF15803D),
-                        height: 1.3,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
+                      ).then((value) {
+                        if (value == true) {
+                          _loadData();
+                        }
+                      });
+                    },
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
         ),
       ),
     );
