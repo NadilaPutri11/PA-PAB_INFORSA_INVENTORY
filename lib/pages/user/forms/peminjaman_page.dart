@@ -103,6 +103,10 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
 
+<<<<<<< HEAD
+=======
+    // Gunakan post-frame callback untuk set state agar tidak terjadi rebuild loop
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     if (_selectedDepartment == null && user != null) {
       _selectedDepartment = user.departemen;
     }
@@ -118,7 +122,14 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
         ),
         title: const Text(
           'Form Peminjaman',
+<<<<<<< HEAD
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+=======
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         ),
         centerTitle: true,
       ),
@@ -194,9 +205,14 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
                             context: context,
                             initialDate: DateTime.now(),
                             firstDate: DateTime.now(),
+<<<<<<< HEAD
                             lastDate: DateTime.now().add(
                               const Duration(days: 30),
                             ),
+=======
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 30)),
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                           );
                           if (d != null) setState(() => _borrowDate = d);
                         },
@@ -217,9 +233,14 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
                             context: context,
                             initialDate: _borrowDate ?? DateTime.now(),
                             firstDate: _borrowDate ?? DateTime.now(),
+<<<<<<< HEAD
                             lastDate: DateTime.now().add(
                               const Duration(days: 60),
                             ),
+=======
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 60)),
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                           );
                           if (d != null) setState(() => _returnDate = d);
                         },

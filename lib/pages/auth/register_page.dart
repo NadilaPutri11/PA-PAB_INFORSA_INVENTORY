@@ -216,8 +216,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (v) {
                     final value = v?.trim() ?? '';
+<<<<<<< HEAD
                     if (value.isEmpty)
                       return 'Nomor WhatsApp tidak boleh kosong';
+=======
+                    if (value.isEmpty) return 'Nomor WhatsApp tidak boleh kosong';
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                     if (value.length < 10) return 'Nomor WhatsApp tidak valid';
                     return null;
                   },

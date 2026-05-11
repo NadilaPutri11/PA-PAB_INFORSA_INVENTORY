@@ -17,7 +17,11 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+<<<<<<< HEAD
   
+=======
+    // Refresh data user saat profile page dibuka
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
       authProvider.refreshProfile();
@@ -59,6 +63,10 @@ class _ProfilePageState extends State<ProfilePage> {
         .toUpperCase();
   }
 
+<<<<<<< HEAD
+=======
+  // FUNGSI BARU: Langsung membuka link WA spesifik yang Anda minta [Terupdate]
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
   Future<void> _openWhatsAppLink() async {
     final Uri url = Uri.parse("https://wa.me/6281350918562");
 
@@ -129,6 +137,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
+    
+    // Cek apakah halaman ini di-push standalone atau bagian dari MainUserPage
+    final isStandalone = Navigator.of(context).canPop();
 
     final isStandalone = Navigator.of(context).canPop();
 
@@ -325,14 +336,25 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
       ),
+<<<<<<< HEAD
       bottomNavigationBar: isStandalone
           ? const UserNavbar(selectedIndex: 3, onItemTapped: _naviateToPage)
           : null,
+=======
+      bottomNavigationBar: isStandalone ? const UserNavbar(selectedIndex: 3, onItemTapped: _naviateToPage) : null,
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     );
   }
 
   static void _naviateToPage(int index) {
+<<<<<<< HEAD
   }
+=======
+    // Ini callback untuk navbar standalone
+  }
+
+  // --- BAGIAN DIALOG (TETAP SAMA) ---
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
 
   Widget _buildProfileInfo(dynamic user, String? email) {
     return Column(
@@ -406,16 +428,27 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _showEditProfileDialog(BuildContext context, AuthProvider auth) {
     final user = auth.currentUser;
+<<<<<<< HEAD
 
+=======
+    
+    // Coba ambil data dari metadata jika available
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     final currentUser = auth.currentUser;
     final namaController = TextEditingController(
       text: currentUser?.nama ?? 'User Baru',
     );
     final nimController = TextEditingController(text: currentUser?.nim ?? '');
+<<<<<<< HEAD
     final waController = TextEditingController(
       text: currentUser?.noWhatsapp ?? '',
     );
 
+=======
+    final waController =
+        TextEditingController(text: currentUser?.noWhatsapp ?? '');
+    
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     final List<String> departments = [
       'PSD',
       'RELACS',
@@ -431,7 +464,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
     showDialog(
       context: context,
+<<<<<<< HEAD
       barrierDismissible: !isAutoEdit, 
+=======
+      barrierDismissible: !isAutoEdit, // Prevent dismiss jika auto-edit
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) {
           bool isSaving = false;
@@ -440,7 +477,13 @@ class _ProfilePageState extends State<ProfilePage> {
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+<<<<<<< HEAD
                 Text(isAutoEdit ? 'Lengkapi Data Profil Anda' : 'Edit Profil'),
+=======
+                Text(
+                  isAutoEdit ? 'Lengkapi Data Profil Anda' : 'Edit Profil',
+                ),
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
@@ -470,10 +513,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             Expanded(
                               child: Text(
                                 'Silakan lengkapi data profil Anda untuk melanjutkan',
+<<<<<<< HEAD
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.blue,
                                 ),
+=======
+                                style: TextStyle(fontSize: 12, color: Colors.blue),
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                               ),
                             ),
                           ],
@@ -505,11 +552,16 @@ class _ProfilePageState extends State<ProfilePage> {
                     items: isSaving
                         ? null
                         : departments
+<<<<<<< HEAD
                               .map(
                                 (d) =>
                                     DropdownMenuItem(value: d, child: Text(d)),
                               )
                               .toList(),
+=======
+                            .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                            .toList(),
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                     onChanged: isSaving
                         ? null
                         : (val) => setStateDialog(() => selectedDept = val!),
@@ -581,9 +633,13 @@ class _ProfilePageState extends State<ProfilePage> {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
+<<<<<<< HEAD
                                 content: Text(
                                   'Gagal menyimpan profil. Silakan coba lagi.',
                                 ),
+=======
+                                content: Text('Gagal menyimpan profil. Silakan coba lagi.'),
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                                 backgroundColor: Colors.red,
                                 duration: Duration(seconds: 2),
                               ),

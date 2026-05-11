@@ -84,14 +84,22 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (auth.isLoggedIn) {
       if (auth.isAdmin) {
+<<<<<<< HEAD
        
+=======
+        // Prefetch data admin saat splash agar dashboard langsung terisi.
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         try {
           await Future.wait([
             context.read<DashboardProvider>().fetchDashboardData(silent: true),
             context.read<InventoryProvider>().fetchItems(),
           ]);
         } catch (_) {
+<<<<<<< HEAD
           
+=======
+          // Jika prefetch gagal, tetap lanjut ke halaman admin.
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         }
       }
 

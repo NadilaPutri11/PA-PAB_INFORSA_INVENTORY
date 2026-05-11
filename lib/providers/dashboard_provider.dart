@@ -50,7 +50,11 @@ class ActiveLoanData {
   final String userName;
   final String userPhone;
   final String assetName;
+<<<<<<< HEAD
   final String type; 
+=======
+  final String type; // Pinjam or Perpanjang
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
   final String status;
   final DateTime dueDate;
   final bool isNearingDue; 
@@ -101,6 +105,8 @@ class DashboardProvider extends ChangeNotifier {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       fetchDashboardData(silent: true);
+      // Optional: Admin might want periodic overdue checks
+      // but usually once per session or on demand is enough
     });
 
     _startDashboardRealtime();
@@ -165,6 +171,10 @@ class DashboardProvider extends ChangeNotifier {
   Future<void> fetchDashboardData({bool silent = false}) async {
     if (!silent) _setLoading(true);
     try {
+<<<<<<< HEAD
+=======
+      // Mulai semua request secara paralel agar waktu tunggu total lebih singkat.
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       final activeLoansFuture = _fetchActiveLoanData();
       final usersFuture = _fetchUserRegistrationData();
       final activeLoansCountFuture = _fetchActiveLoansCount();
@@ -172,6 +182,10 @@ class DashboardProvider extends ChangeNotifier {
       final statusBreakdownFuture = _fetchStatusBreakdown();
       final usageStatsFuture = _fetchUsageStats();
 
+<<<<<<< HEAD
+=======
+      // Prioritaskan tabel peminjaman aktif supaya cepat tampil saat halaman dibuka.
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       _activeLoans = await activeLoansFuture;
       notifyListeners();
 
@@ -313,6 +327,10 @@ class DashboardProvider extends ChangeNotifier {
 
     final loans = loansRes as List;
 
+<<<<<<< HEAD
+=======
+    // Fallback hanya untuk baris yang join-nya benar-benar kosong.
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     final missingUserIds = <String>{};
     final missingItemIds = <String>{};
 

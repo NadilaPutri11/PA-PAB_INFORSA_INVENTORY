@@ -640,10 +640,18 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
     if (rawUrl == null || rawUrl.trim().isEmpty) return null;
     final value = rawUrl.trim();
 
+<<<<<<< HEAD
+=======
+    // URL penuh langsung dipakai.
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     if (value.startsWith('http://') || value.startsWith('https://')) {
       return value;
     }
 
+<<<<<<< HEAD
+=======
+    // Jika hanya path, bentuk ke public URL bucket foto_barang.
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     final normalizedPath = value.startsWith('barang/') ? value : 'barang/$value';
     return SupabaseService.storage.from('foto_barang').getPublicUrl(normalizedPath);
   }

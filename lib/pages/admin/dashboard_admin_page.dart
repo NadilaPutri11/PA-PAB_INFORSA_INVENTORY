@@ -18,7 +18,11 @@ import '../../providers/inventory_provider.dart';
 import '../user/activity_page.dart';
 import 'user_activity_detail_page.dart';
 import '../../utils/download_web_stub.dart'
+<<<<<<< HEAD
     if (dart.library.html) '../../utils/download_web.dart';
+=======
+  if (dart.library.html) '../../utils/download_web.dart';
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
 
 class DashboardAdminPage extends StatefulWidget {
   const DashboardAdminPage({super.key});
@@ -45,7 +49,12 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final dashboard = _dashboardProvider;
       if (dashboard == null) return;
+<<<<<<< HEAD
 
+=======
+      // Initial load dibuat silent agar tidak menampilkan spinner blok besar.
+      // Jika sudah diprefetch dari splash, hindari fetch ulang.
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       if (dashboard.activeLoans.isEmpty) {
         dashboard.fetchDashboardData(silent: true);
       }
@@ -103,7 +112,11 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
           _buildSearchAndFilters(),
           const SizedBox(height: 16),
           _buildActiveLoansTableSection(),
+<<<<<<< HEAD
           const SizedBox(height: 80),
+=======
+          const SizedBox(height: 80), // Space for navbar
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         ],
       ),
     );
@@ -255,6 +268,7 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
           ),
         ),
         const SizedBox(height: 16),
+<<<<<<< HEAD
         const SizedBox(height: 16),
 
         SingleChildScrollView(
@@ -297,6 +311,41 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
               ),
             ],
           ),
+=======
+        Row(
+          children: [
+            _buildFilterButton(
+              label: _onlyNearDue ? '< 3 Hari' : 'Semua Aktif',
+              icon: Icons.timelapse_outlined,
+              onTap: () {
+                setState(() {
+                  _onlyNearDue = !_onlyNearDue;
+                });
+              },
+            ),
+            const SizedBox(width: 12),
+            _buildFilterButton(
+              label: _selectedSort,
+              icon: Icons.sort,
+              onTap: () {
+                setState(() {
+                  _selectedSort = _selectedSort == 'Terbaru'
+                      ? 'Terlama'
+                      : 'Terbaru';
+                });
+              },
+            ),
+            const SizedBox(width: 12),
+            _buildFilterButton(
+              label: 'Refresh',
+              icon: Icons.refresh,
+              onTap: () {
+                context.read<DashboardProvider>().fetchDashboardData(silent: true);
+                context.read<InventoryProvider>().fetchItems();
+              },
+            ),
+          ],
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         ),
       ],
     );
@@ -483,6 +532,7 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+<<<<<<< HEAD
               Expanded(
                 child: Text(
                   title,
@@ -497,6 +547,19 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
 
               GestureDetector(
                 onTap: () {
+=======
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2B3674),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  // Admin sees all activity
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -535,6 +598,10 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
   Widget _buildActiveLoansTable() {
     final dashboard = context.watch<DashboardProvider>();
 
+<<<<<<< HEAD
+=======
+    // Filtering
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     List<ActiveLoanData> filteredLoans = dashboard.activeLoans.where((loan) {
       final matchSearch =
           _searchQuery.isEmpty ||
@@ -545,6 +612,10 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
       return matchSearch && matchNearDue;
     }).toList();
 
+<<<<<<< HEAD
+=======
+    // Sorting
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     filteredLoans.sort((a, b) {
       if (_selectedSort == 'Terbaru') {
         return b.dueDate.compareTo(a.dueDate);
@@ -579,9 +650,13 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
                       0xFF4318FF,
                     ).withValues(alpha: 0.1),
                     child: Text(
+<<<<<<< HEAD
                       loan.userName.isNotEmpty
                           ? loan.userName[0].toUpperCase()
                           : 'U',
+=======
+                      loan.userName.isNotEmpty ? loan.userName[0].toUpperCase() : 'U',
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                       style: const TextStyle(
                         fontSize: 10,
                         color: Color(0xFF4318FF),
@@ -606,7 +681,14 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
             DataCell(
               Text(
                 loan.userPhone,
+<<<<<<< HEAD
                 style: const TextStyle(fontSize: 12, color: Color(0xFF2B3674)),
+=======
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF2B3674),
+                ),
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
               ),
             ),
             DataCell(
@@ -644,9 +726,13 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
                 child: Text(
                   statusLabel,
                   style: TextStyle(
+<<<<<<< HEAD
                     color: loan.status == 'disetujui'
                         ? Colors.blue
                         : Colors.red,
+=======
+                    color: loan.status == 'disetujui' ? Colors.blue : Colors.red,
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -673,8 +759,12 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
+<<<<<<< HEAD
                       builder: (context) =>
                           UserActivityDetailPage(loanId: loan.id),
+=======
+                      builder: (context) => UserActivityDetailPage(loanId: loan.id),
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                     ),
                   );
                 },

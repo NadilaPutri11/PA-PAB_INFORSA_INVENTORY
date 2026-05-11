@@ -58,6 +58,10 @@ class InventoryProvider extends ChangeNotifier {
         _items = (data as List).map((e) => ItemModel.fromMap(e)).toList();
         _lastFetchedAt = DateTime.now();
 
+<<<<<<< HEAD
+=======
+        // Tetap render hasil baru meski loading indikator tidak ditampilkan.
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         if (!shouldShowLoading) {
           notifyListeners();
         }
@@ -156,6 +160,45 @@ class InventoryProvider extends ChangeNotifier {
           .eq('barang_id', id);
       debugPrint('Deleted peminjaman records for barang_id: $id');
 
+<<<<<<< HEAD
+=======
+      // 2. Get all peminjaman IDs for this barang
+      final peminjamanList = await SupabaseService.table('peminjaman')
+          .select('id')
+          .eq('barang_id', id);
+      
+      final peminjamanIds = (peminjamanList as List)
+          .map((p) => p['id'] as String)
+          .toList();
+
+      debugPrint('Found ${peminjamanIds.length} peminjaman records for barang_id: $id');
+
+      // 3. Delete pengembalian that reference these peminjaman (cascade)
+      if (peminjamanIds.isNotEmpty) {
+        for (final peminjamanId in peminjamanIds) {
+          await SupabaseService.table('pengembalian')
+              .delete()
+              .eq('peminjaman_id', peminjamanId);
+        }
+        debugPrint('Deleted pengembalian records for peminjaman_ids: $peminjamanIds');
+
+        // 4. Delete perpanjangan that reference these peminjaman (cascade)
+        for (final peminjamanId in peminjamanIds) {
+          await SupabaseService.table('perpanjangan')
+              .delete()
+              .eq('peminjaman_id', peminjamanId);
+        }
+        debugPrint('Deleted perpanjangan records for peminjaman_ids: $peminjamanIds');
+      }
+
+      // 5. Delete all peminjaman that reference this barang
+      await SupabaseService.table('peminjaman')
+          .delete()
+          .eq('barang_id', id);
+      debugPrint('Deleted peminjaman records for barang_id: $id');
+
+      // 6. Delete files from storage if they exist
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       if (item.fotoUrl != null) {
         final path = _extractPathFromUrl(item.fotoUrl!);
         if (path != null) {
@@ -169,6 +212,10 @@ class InventoryProvider extends ChangeNotifier {
         }
       }
 
+<<<<<<< HEAD
+=======
+      // 7. Finally delete the item from database
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       await SupabaseService.table('barang').delete().eq('id', id);
       await fetchItems();
       return true;
@@ -199,6 +246,10 @@ class InventoryProvider extends ChangeNotifier {
     String extension,
   ) async {
     try {
+<<<<<<< HEAD
+=======
+      // Validasi ukuran file (max 10MB)
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       const maxSizeMB = 10;
       if (bytes.lengthInBytes > maxSizeMB * 1024 * 1024) {
         final errorMsg = 'File terlalu besar. Maksimal $maxSizeMB MB.';
@@ -208,7 +259,12 @@ class InventoryProvider extends ChangeNotifier {
       }
 
       debugPrint('uploadFotoBarang: Starting upload (${bytes.lengthInBytes} bytes)');
+<<<<<<< HEAD
 
+=======
+      
+      // Menambahkan timestamp agar unik dan menghindari caching browser
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       final fileName = '${itemCode}_${DateTime.now().millisecondsSinceEpoch}.$extension';
       final path = 'barang/$fileName';
       
@@ -249,6 +305,10 @@ class InventoryProvider extends ChangeNotifier {
     String extension,
   ) async {
     try {
+<<<<<<< HEAD
+=======
+      // Validasi ukuran file (max 20MB untuk dokumen)
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       const maxSizeMB = 20;
       if (bytes.lengthInBytes > maxSizeMB * 1024 * 1024) {
         final errorMsg = 'File terlalu besar. Maksimal $maxSizeMB MB.';

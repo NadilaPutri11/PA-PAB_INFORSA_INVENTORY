@@ -53,6 +53,10 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
     final menunggu = approval.peminjaman.where((p) => p.isMenunggu).toList();
     final terlambat = approval.terlambat;
 
+<<<<<<< HEAD
+=======
+    // Tampilkan hanya data barang dengan status "dipinjam" milik user yang login dan masih dalam rentang tanggal peminjaman
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     final peminjamanAktif = approval.peminjaman
         .where(
           (p) =>

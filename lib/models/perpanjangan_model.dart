@@ -26,6 +26,10 @@ class PerpanjanganModel {
     return PerpanjanganModel(
       id: map['id'] ?? '',
       peminjamanId: map['peminjaman_id'] ?? '',
+<<<<<<< HEAD
+=======
+      // FIX: Tambah null safety untuk tanggalJatuhTempoBaru
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       tanggalJatuhTempoBaru: tanggalRaw != null
           ? DateTime.parse(tanggalRaw.toString())
           : DateTime.now(),

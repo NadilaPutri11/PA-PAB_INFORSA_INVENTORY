@@ -259,6 +259,10 @@ class _MainAdminPageState extends State<MainAdminPage> {
                 _buildAddItemRoute(),
               );
 
+<<<<<<< HEAD
+=======
+              // Hanya navigate jika Add page mengirim index navbar.
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
               if (!mounted) return;
               if (selectedNavbarIndex != null && selectedNavbarIndex != 2) {
                 setState(() {

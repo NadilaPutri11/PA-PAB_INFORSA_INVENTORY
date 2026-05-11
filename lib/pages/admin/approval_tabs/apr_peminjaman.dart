@@ -22,14 +22,26 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
   Widget build(BuildContext context) {
     final approval = context.watch<ApprovalProvider>();
 
+<<<<<<< HEAD
     final pendingList = approval.pendingPeminjaman;
     final fmt = DateFormat('dd MMM yyyy', 'id');
 
+=======
+    // Menampilkan permohonan yang menunggu keputusan admin
+    final pendingList = approval.pendingPeminjaman;
+    final fmt = DateFormat('dd MMM yyyy', 'id');
+
+    // Kalkulasi Pagination
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     final int totalPages = (pendingList.length / _itemsPerPage).ceil();
     int displayPage = (_currentPage > totalPages && totalPages > 0)
         ? 1
         : _currentPage;
 
+<<<<<<< HEAD
+=======
+    // Memotong data sesuai halaman saat ini
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     final paginatedItems = pendingList.isEmpty
         ? <PeminjamanModel>[]
       : pendingList
@@ -222,6 +234,10 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
     final durasi = p.rencanakembali.difference(p.tanggalPinjam).inDays;
     final displayDurasi = durasi <= 0 ? 1 : durasi;
 
+<<<<<<< HEAD
+=======
+    // Memecah URL gabungan jika ada koma (karena 2 foto disatukan)
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     final imageUrls = p.fotoSebelumPinjamUrl?.isNotEmpty == true
         ? p.fotoSebelumPinjamUrl!.split(',')
         : <String>[];

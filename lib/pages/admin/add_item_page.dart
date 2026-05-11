@@ -106,6 +106,10 @@ class _AddItemPageState extends State<AddItemPage> {
     }
   }
 
+<<<<<<< HEAD
+=======
+  // ── Reset Form ────────────────────────────────────────────────────────────
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
   void _resetForm() {
     _formKey.currentState?.reset();
     setState(() {
@@ -214,6 +218,10 @@ class _AddItemPageState extends State<AddItemPage> {
     if (success) {
       if (mounted) {
         _showSnackBar('Barang berhasil ditambahkan!');
+<<<<<<< HEAD
+=======
+        // Reset form setelah berhasil menambah barang
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         _resetForm();
       }
     } else {

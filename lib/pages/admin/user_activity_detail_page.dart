@@ -28,6 +28,10 @@ class _UserActivityDetailPageState extends State<UserActivityDetailPage> {
   Future<void> _checkAccessAndFetchData() async {
     final auth = context.read<AuthProvider>();
 
+<<<<<<< HEAD
+=======
+    // Middleware: Check if user is admin
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     if (!auth.isAdmin) {
       setState(() {
         _error = 'Akses ditolak. Hanya Admin yang dapat mengakses halaman ini.';
@@ -53,6 +57,7 @@ class _UserActivityDetailPageState extends State<UserActivityDetailPage> {
       final barangId = loanMap['barang_id']?.toString();
 
       final joinedUsers = loanMap['users'];
+<<<<<<< HEAD
       if ((joinedUsers == null ||
               (joinedUsers is Map && joinedUsers.isEmpty)) &&
           userId != null &&
@@ -61,11 +66,22 @@ class _UserActivityDetailPageState extends State<UserActivityDetailPage> {
           final userData = await SupabaseService.table(
             'users',
           ).select('nama, departemen, no_whatsapp').eq('id', userId).single();
+=======
+      if ((joinedUsers == null || (joinedUsers is Map && joinedUsers.isEmpty)) &&
+          userId != null &&
+          userId.isNotEmpty) {
+        try {
+          final userData = await SupabaseService.table('users')
+              .select('nama, departemen, no_whatsapp')
+              .eq('id', userId)
+              .single();
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
           loanMap['users'] = userData;
         } catch (_) {}
       }
 
       final joinedBarang = loanMap['barang'];
+<<<<<<< HEAD
       if ((joinedBarang == null ||
               (joinedBarang is Map && joinedBarang.isEmpty)) &&
           barangId != null &&
@@ -74,6 +90,16 @@ class _UserActivityDetailPageState extends State<UserActivityDetailPage> {
           final barangData = await SupabaseService.table(
             'barang',
           ).select('nama_barang, kode_barang').eq('id', barangId).single();
+=======
+      if ((joinedBarang == null || (joinedBarang is Map && joinedBarang.isEmpty)) &&
+          barangId != null &&
+          barangId.isNotEmpty) {
+        try {
+          final barangData = await SupabaseService.table('barang')
+              .select('nama_barang, kode_barang')
+              .eq('id', barangId)
+              .single();
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
           loanMap['barang'] = barangData;
         } catch (_) {}
       }
@@ -95,7 +121,13 @@ class _UserActivityDetailPageState extends State<UserActivityDetailPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
+<<<<<<< HEAD
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+=======
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     }
 
     if (_error != null) {

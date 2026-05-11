@@ -171,6 +171,10 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
+<<<<<<< HEAD
+=======
+  // ── Auto-Notification for Overdue (Admin) ──────────────────────────────────
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
   Future<void> checkAndNotifyOverdue() async {
     try {
       final now = DateTime.now();
@@ -183,6 +187,10 @@ class NotificationProvider extends ChangeNotifier {
         final userName = loan['users']['nama'];
         final assetName = loan['barang']['nama_barang'];
 
+<<<<<<< HEAD
+=======
+        // Cek apakah sudah ada notif jatuh tempo untuk peminjaman ini hari ini
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         final today = DateTime(now.year, now.month, now.day);
         final existingNotif = await SupabaseService.table('notifications')
             .select()
@@ -207,6 +215,10 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
+<<<<<<< HEAD
+=======
+  // ── Cleanup ─────────────────────────────────────────────────────────────────
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
   void clearNotifications() {
     _notifications = [];
     unsubscribe();

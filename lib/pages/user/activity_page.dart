@@ -276,6 +276,11 @@ class _ActivityPageState extends State<ActivityPage> {
       ),
     );
   }
+<<<<<<< HEAD
+=======
+
+  // ── Card Builder Helpers (Sekarang di dalam Class State) ────────────────────
+>>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
 
   Widget _buildKonfirmasiCard(PeminjamanModel p) {
     return Container(
