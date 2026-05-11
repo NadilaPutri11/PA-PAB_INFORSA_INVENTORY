@@ -5,7 +5,6 @@ import '../../../providers/approval_provider.dart';
 import '../../../models/pengembalian_model.dart';
 
 class AprPengembalianTab extends StatelessWidget {
-  // FIX: Terima callback refresh dari parent
   final Future<void> Function() onRefresh;
 
   const AprPengembalianTab({super.key, required this.onRefresh});
@@ -296,7 +295,6 @@ class AprPengembalianTab extends StatelessWidget {
             ],
           ),
 
-          // FIX: Tombol hanya muncul kalau masih pending
           if (isPending) ...[
             const SizedBox(height: 20),
             SizedBox(

@@ -182,11 +182,12 @@ class NotificationProvider extends ChangeNotifier {
       for (var loan in (loansRes as List)) {
         final userName = loan['users']['nama'];
         final assetName = loan['barang']['nama_barang'];
+
         final today = DateTime(now.year, now.month, now.day);
         final existingNotif = await SupabaseService.table('notifications')
             .select()
             .eq('title', 'Jatuh Tempo!')
-            .ilike('message', '%$assetName%')
+          .ilike('message', '%$assetName%')
             .gte('created_at', today.toIso8601String());
 
         if ((existingNotif as List).isEmpty) {

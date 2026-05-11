@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:file_picker/file_picker.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/approval_provider.dart';
 import '../../../models/item_model.dart';
 import 'dart:typed_data';
+import 'package:vibration/vibration.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:async';
 
 class PeminjamanPage extends StatefulWidget {
   final ItemModel? item;
@@ -43,6 +45,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
         _returnDate == null ||
         _foto1 == null ||
         _foto2 == null) {
+      Vibration.vibrate(pattern: [0, 150, 100, 150]);
       _showSnackBar(
         'Mohon lengkapi tanggal dan lampirkan 2 foto kondisi',
         isError: true,
@@ -57,9 +60,9 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
       final approval = context.read<ApprovalProvider>();
 
       final String? url1 = await approval.uploadFotoKondisi(
-        _foto1!,
+        _foto1!, 
         'jpg',
-        'pjm_front_${DateTime.now().millisecondsSinceEpoch}',
+        'pjm_front_${DateTime.now().millisecondsSinceEpoch}', 
       );
 
       final String? url2 = await approval.uploadFotoKondisi(
@@ -78,7 +81,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
         tanggalPinjam: _borrowDate!,
         rencanaKembali: _returnDate!,
         alasan: _alasanController.text.trim(),
-        fotoUrl: combinedUrls,
+        fotoUrl: combinedUrls, 
       );
 
       if (success && mounted) {
@@ -97,7 +100,6 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
   @override
   Widget build(BuildContext context) {
     final fmt = DateFormat('dd MMM yyyy', 'id');
-    // Ambil data user dari AuthProvider
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
 
@@ -154,6 +156,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 24),
 
+            // 1. NAMA PEMINJAM (Auto-fill)
             _buildSectionLabel('NAMA PEMINJAM'),
             _buildReadOnlyField(
               user?.nama ?? 'Nama tidak ditemukan',
@@ -161,6 +164,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 20),
 
+            // 2. DEPARTEMEN (Auto-fill)
             _buildSectionLabel('DEPARTEMEN'),
             _buildReadOnlyField(
               user?.departemen ?? 'Departemen tidak ditemukan',
@@ -168,6 +172,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 20),
 
+            // 3. NAMA BARANG
             _buildSectionLabel('ASET YANG DIPINJAM'),
             _buildReadOnlyField(
               widget.item?.namaBarang ?? '-',
@@ -175,6 +180,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 20),
 
+            // 4. RENCANA PINJAM & KEMBALI
             Row(
               children: [
                 Expanded(
@@ -226,6 +232,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 20),
 
+            // Foto Kondisi
             _buildSectionLabel('FOTO KONDISI ASET (WAJIB)'),
             Row(
               children: [
@@ -236,6 +243,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 20),
 
+            // 6. ALASAN PEMINJAMAN
             _buildSectionLabel('ALASAN PEMINJAMAN'),
             TextField(
               controller: _alasanController,
@@ -254,6 +262,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 40),
 
+            // TOMBOL KIRIM
             SizedBox(
               width: double.infinity,
               height: 54,
@@ -369,18 +378,23 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
     );
   }
 
+  final ImagePicker _picker = ImagePicker();
+
   Future<void> _pickImage(bool isDepan) async {
-    final result = await FilePicker.pickFiles(
-      type: FileType.image,
-      withData: true,
+    final XFile? photo = await _picker.pickImage(
+      source: ImageSource.camera, 
+      imageQuality:
+          75, 
     );
 
-    if (result != null && result.files.single.bytes != null) {
+    if (photo != null) {
+      final Uint8List photoBytes = await photo.readAsBytes();
+
       setState(() {
         if (isDepan) {
-          _foto1 = result.files.single.bytes;
+          _foto1 = photoBytes;
         } else {
-          _foto2 = result.files.single.bytes;
+          _foto2 = photoBytes;
         }
       });
     }

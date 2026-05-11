@@ -559,23 +559,20 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
                               final submitted = await Navigator.push<bool>(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      PeminjamanPage(item: item),
+                                  builder: (context) => PeminjamanPage(
+                                    item: item,
+                                  ), 
                                 ),
                               );
 
                               if (!context.mounted) return;
 
                               if (submitted == true) {
-                                await context
-                                    .read<InventoryProvider>()
-                                    .fetchItems();
+                                await context.read<InventoryProvider>().fetchItems();
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text(
-                                        'Permohonan peminjaman berhasil dikirim',
-                                      ),
+                                      content: Text('Permohonan peminjaman berhasil dikirim'),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -647,12 +644,8 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
       return value;
     }
 
-    final normalizedPath = value.startsWith('barang/')
-        ? value
-        : 'barang/$value';
-    return SupabaseService.storage
-        .from('foto_barang')
-        .getPublicUrl(normalizedPath);
+    final normalizedPath = value.startsWith('barang/') ? value : 'barang/$value';
+    return SupabaseService.storage.from('foto_barang').getPublicUrl(normalizedPath);
   }
 
   Widget _buildAssetImage(ItemModel item) {

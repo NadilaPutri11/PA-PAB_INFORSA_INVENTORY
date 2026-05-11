@@ -23,8 +23,10 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
   String _selectedTahun = 'Semua Tahun';
   String _selectedSatuan = 'Semua Satuan';
 
+  // State Pengurutan (Sorting)
   String _selectedSort = 'Terbaru';
 
+  // State Pagination
   int _currentPage = 1;
   final int _itemsPerPage = 5;
 
@@ -162,6 +164,7 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
   Widget build(BuildContext context) {
     final inventory = context.watch<InventoryProvider>();
 
+    // 1. Filtering Data
     List<ItemModel> filtered = inventory.items.where((item) {
       final matchSearch =
           _searchQuery.isEmpty ||
@@ -183,22 +186,25 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
       return matchSearch && matchAsal && matchSatuan && matchKategori;
     }).toList();
 
+    // Sorting Data (Terbaru / Terlama)
     filtered.sort((a, b) {
       DateTime dateA = a.tanggalPembukuan ?? DateTime.now();
       DateTime dateB = b.tanggalPembukuan ?? DateTime.now();
 
       if (_selectedSort == 'Terbaru') {
-        return dateB.compareTo(dateA);
+        return dateB.compareTo(dateA); // Descending
       } else {
-        return dateA.compareTo(dateB);
+        return dateA.compareTo(dateB); // Ascending
       }
     });
 
+    // 2. Kalkulasi Pagination
     final int totalPages = (filtered.length / _itemsPerPage).ceil();
     int displayPage = (_currentPage > totalPages && totalPages > 0)
         ? 1
         : _currentPage;
 
+    // 3. Potong Data (Maksimal 5 item)
     final paginatedItems = filtered.isEmpty
         ? <ItemModel>[]
         : filtered
@@ -306,6 +312,7 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
               _buildHeaderJudul(),
               const SizedBox(height: 20),
 
+              // Pagination
               AdminPagination(
                 totalPages: totalPages,
                 currentPage: displayPage,
@@ -313,6 +320,7 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
               ),
               const SizedBox(height: 24),
 
+              // List Aset
               _buildListAset(
                 inventory.isLoading,
                 inventory.items.isEmpty,
@@ -376,7 +384,7 @@ class _InventoryAdminPageState extends State<InventoryAdminPage> {
           onSelected: (String value) {
             setState(() {
               _selectedSort = value;
-              _currentPage = 1;
+              _currentPage = 1; 
             });
           },
           itemBuilder: (BuildContext context) => [
@@ -716,6 +724,8 @@ class AdminPagination extends StatelessWidget {
   }
 }
 
+// === DESAIN CARD 100% SESUAI FIGMA ===
+
 class AdminAssetCard extends StatelessWidget {
   final ItemModel item;
 
@@ -726,7 +736,11 @@ class AdminAssetCard extends StatelessWidget {
 
     if (photoUrl == null || photoUrl.trim().isEmpty) {
       return const Center(
-        child: Icon(Icons.inventory_2_outlined, color: Colors.grey, size: 28),
+        child: Icon(
+          Icons.inventory_2_outlined,
+          color: Colors.grey,
+          size: 28,
+        ),
       );
     }
 
@@ -798,7 +812,7 @@ class AdminAssetCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Icon Box Kiri
+       
           Container(
             width: 60,
             height: 60,
@@ -810,11 +824,12 @@ class AdminAssetCard extends StatelessWidget {
           ),
           const SizedBox(width: 16),
 
-          // 2. Konten Kanan
+          
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+            
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -842,7 +857,7 @@ class AdminAssetCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Tombol Edit & Delete
+                 
                     Row(
                       children: [
                         InkWell(
@@ -852,8 +867,7 @@ class AdminAssetCard extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      EditItemPage(item: item),
+                                  builder: (context) => EditItemPage(item: item),
                                 ),
                               ).catchError((e) {
                                 debugPrint('Edit item navigation error: $e');

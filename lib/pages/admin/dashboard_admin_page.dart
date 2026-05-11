@@ -162,12 +162,15 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Daftar Inventaris',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2B3674),
+            Expanded(
+              child: const Text(
+                'Daftar Inventaris',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2B3674),
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             _buildExportButtons(),
@@ -205,17 +208,21 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
   }) {
     return ElevatedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icon, size: 18),
-      label: Text(label),
+      icon: Icon(icon, size: 14),
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         foregroundColor: color,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           side: BorderSide(color: color.withValues(alpha: 0.2)),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       ),
     );
   }
@@ -248,41 +255,48 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
           ),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            _buildFilterButton(
-              label: _onlyNearDue ? '< 3 Hari' : 'Semua Aktif',
-              icon: Icons.timelapse_outlined,
-              onTap: () {
-                setState(() {
-                  _onlyNearDue = !_onlyNearDue;
-                });
-              },
-            ),
-            const SizedBox(width: 12),
-            _buildFilterButton(
-              label: _selectedSort,
-              icon: Icons.sort,
-              onTap: () {
-                setState(() {
-                  _selectedSort = _selectedSort == 'Terbaru'
-                      ? 'Terlama'
-                      : 'Terbaru';
-                });
-              },
-            ),
-            const SizedBox(width: 12),
-            _buildFilterButton(
-              label: 'Refresh',
-              icon: Icons.refresh,
-              onTap: () {
-                context.read<DashboardProvider>().fetchDashboardData(
-                  silent: true,
-                );
-                context.read<InventoryProvider>().fetchItems();
-              },
-            ),
-          ],
+        const SizedBox(height: 16),
+
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              _buildFilterButton(
+                label: _onlyNearDue ? '< 3 Hari' : 'Semua Aktif',
+                icon: Icons.timelapse_outlined,
+                onTap: () {
+                  setState(() {
+                    _onlyNearDue = !_onlyNearDue;
+                  });
+                },
+              ),
+              const SizedBox(width: 12),
+              _buildFilterButton(
+                label: _selectedSort,
+                icon: Icons.sort,
+                onTap: () {
+                  setState(() {
+                    _selectedSort = _selectedSort == 'Terbaru'
+                        ? 'Terlama'
+                        : 'Terbaru';
+                  });
+                },
+              ),
+              const SizedBox(width: 12),
+              _buildFilterButton(
+                label: 'Refresh',
+                icon: Icons.refresh,
+                showArrow: false,
+                onTap: () {
+                  context.read<DashboardProvider>().fetchDashboardData(
+                    silent: true,
+                  );
+                  context.read<InventoryProvider>().fetchItems();
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -292,6 +306,7 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
     required String label,
     required IconData icon,
     required VoidCallback onTap,
+    bool showArrow = true,
   }) {
     return InkWell(
       onTap: onTap,
@@ -321,12 +336,15 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
                 color: Color(0xFF2B3674),
               ),
             ),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.keyboard_arrow_down,
-              size: 18,
-              color: Color(0xFFA3AED0),
-            ),
+
+            if (showArrow) ...[
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.keyboard_arrow_down,
+                size: 18,
+                color: Color(0xFFA3AED0),
+              ),
+            ],
           ],
         ),
       ),
@@ -465,17 +483,20 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2B3674),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2B3674),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+
               GestureDetector(
                 onTap: () {
-                  // Admin sees all activity
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -514,7 +535,6 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
   Widget _buildActiveLoansTable() {
     final dashboard = context.watch<DashboardProvider>();
 
-    // Filtering
     List<ActiveLoanData> filteredLoans = dashboard.activeLoans.where((loan) {
       final matchSearch =
           _searchQuery.isEmpty ||
@@ -525,7 +545,6 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
       return matchSearch && matchNearDue;
     }).toList();
 
-    // Sorting
     filteredLoans.sort((a, b) {
       if (_selectedSort == 'Terbaru') {
         return b.dueDate.compareTo(a.dueDate);

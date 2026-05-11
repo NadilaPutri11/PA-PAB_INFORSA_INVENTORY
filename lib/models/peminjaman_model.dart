@@ -62,7 +62,6 @@ class PeminjamanModel {
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'])
           : null,
-
       updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'])
           : null,
@@ -120,3 +119,4 @@ class PeminjamanModel {
     );
   }
 }
+

@@ -1,3 +1,8 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// FILE: lib/pages/admin/approvals_admin_page.dart
+// FIX: Hanya halaman ini yang fetch data, tab tidak perlu fetch sendiri
+// ─────────────────────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/approval_provider.dart';
@@ -52,6 +57,8 @@ class _ApprovalsAdminPageState extends State<ApprovalsAdminPage> {
               color: Colors.white,
               width: double.infinity,
               child: TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
                 indicatorColor: navyColor,
                 indicatorWeight: 3,
                 labelColor: navyColor,
@@ -83,6 +90,7 @@ class _ApprovalsAdminPageState extends State<ApprovalsAdminPage> {
               child: approval.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : TabBarView(
+                      
                       children: [
                         AprPeminjamanTab(onRefresh: _loadAll),
                         AprPerpanjanganTab(onRefresh: _loadAll),

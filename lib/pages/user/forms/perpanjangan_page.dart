@@ -26,9 +26,9 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
   }
 
   Future<void> _fetchExtensionCount() async {
-    final count = await context.read<ApprovalProvider>().getExtensionCount(
-      widget.peminjaman.id,
-    );
+    final count = await context
+        .read<ApprovalProvider>()
+        .getExtensionCount(widget.peminjaman.id);
     if (mounted) {
       setState(() {
         _extensionCount = count;
@@ -44,6 +44,7 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    // Validasi 1: Masih dalam rentang peminjaman
     if (DateTime.now().isAfter(widget.peminjaman.rencanakembali)) {
       _showSnackBar(
         'Batas waktu peminjaman telah habis. Anda tidak dapat melakukan perpanjangan.',
@@ -52,6 +53,7 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
       return;
     }
 
+    // Validasi 2: Maksimal 2 kali perpanjangan
     if (_extensionCount >= 2) {
       _showSnackBar(
         'Batas maksimal perpanjangan (2 kali) telah tercapai.',
@@ -76,8 +78,12 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
   Future<void> _handleSubmit() async {
     if (_isCheckingCount) return;
 
+    // Validasi ulang sebelum submit
     if (DateTime.now().isAfter(widget.peminjaman.rencanakembali)) {
-      _showSnackBar('Batas waktu peminjaman telah habis.', isError: true);
+      _showSnackBar(
+        'Batas waktu peminjaman telah habis.',
+        isError: true,
+      );
       return;
     }
 
@@ -119,7 +125,11 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
       _showSnackBar('Perpanjangan berhasil diajukan!');
       Navigator.pop(context, true);
     } else {
-      _showSnackBar('Gagal mengajukan perpanjangan', isError: true);
+      _showSnackBar(
+        context.read<ApprovalProvider>().errorMessage ??
+            'Gagal mengajukan perpanjangan',
+        isError: true,
+      );
     }
   }
 
@@ -145,7 +155,6 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
@@ -268,6 +277,8 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
               ),
             ),
             const SizedBox(height: 24),
+
+            // Card Form Perpanjangan
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -294,6 +305,7 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
                   ),
                   const SizedBox(height: 20),
 
+                  // Tanggal Baru
                   const Text(
                     'TANGGAL JATUH TEMPO BARU',
                     style: TextStyle(
@@ -346,6 +358,7 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
                   ),
                   const SizedBox(height: 20),
 
+                  // Alasan
                   const Text(
                     'ALASAN PERPANJANGAN',
                     style: TextStyle(
@@ -377,6 +390,7 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
                   ),
                   const SizedBox(height: 32),
 
+                  // Tombol Ajukan
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -421,6 +435,7 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Batalkan
                   Center(
                     child: TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -439,6 +454,7 @@ class _PerpanjanganPageState extends State<PerpanjanganPage> {
             ),
             const SizedBox(height: 24),
 
+            // Info Box
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(

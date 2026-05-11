@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart'; 
 import 'package:file_picker/file_picker.dart';
 import '../../providers/inventory_provider.dart';
 import '../../models/item_model.dart';
@@ -229,6 +229,7 @@ class _EditItemPageState extends State<EditItemPage> {
       createdAt: widget.item.createdAt,
       fotoUrl: fotoUrl,
     );
+
 
     final success = await provider.updateItem(updatedItem);
 
@@ -461,7 +462,6 @@ class _EditItemPageState extends State<EditItemPage> {
               ),
               const SizedBox(height: 32),
 
-              // ── INFORMASI WAJIB ────────────────────────────────────────
               _buildSectionTitle('INFORMASI WAJIB'),
               _buildLabel('TANGGAL PEMBUKUAN'),
               GestureDetector(
@@ -541,7 +541,6 @@ class _EditItemPageState extends State<EditItemPage> {
               ),
 
               const SizedBox(height: 32),
-              // ── OPSIONAL ────────────────────────────────────────────────
               _buildSectionTitle('SPESIFIKASI BARANG'),
               _buildTextField(
                 controller: _spesifikasiController,
@@ -550,9 +549,6 @@ class _EditItemPageState extends State<EditItemPage> {
               ),
               const SizedBox(height: 24),
 
-              // =========================================================
-              // LOGIKA CONDITIONAL: HANYA MUNCUL JIKA "BELI" DIPILIH
-              // =========================================================
               if (_asalBarang == 'Beli') ...[
                 _buildSectionTitle('DETAIL PEMBELIAN & KETERANGAN'),
 
@@ -564,7 +560,7 @@ class _EditItemPageState extends State<EditItemPage> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                  ], // FIX: Hanya Angka
+                  ], 
                   validator: (v) {
                     if (v == null || v.isEmpty) {
                       return 'TAHUN WAJIB DIISI UNTUK BARANG BELI';
@@ -582,9 +578,7 @@ class _EditItemPageState extends State<EditItemPage> {
                   decoration: BoxDecoration(
                     color: Colors.blue.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.blue.withValues(alpha: 0.1),
-                    ),
+                    border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -616,7 +610,7 @@ class _EditItemPageState extends State<EditItemPage> {
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
-                        ], // FIX: Mencegah Huruf
+                        ], 
                         isFilled: false,
                         validator: (v) {
                           if (v == null || v.isEmpty) {
@@ -627,7 +621,7 @@ class _EditItemPageState extends State<EditItemPage> {
                       ),
                       const SizedBox(height: 16),
                       _buildLabel('KELENGKAPAN DOKUMEN / NOTA (Opsional)'),
-                      _buildUploadDokumenBox(), // FIX: Fungsi Upload dikembalikan
+                      _buildUploadDokumenBox(), 
                     ],
                   ),
                 ),
@@ -641,7 +635,6 @@ class _EditItemPageState extends State<EditItemPage> {
                 ),
               ],
 
-              // =========================================================
               const SizedBox(height: 40),
 
               // Tombol Simpan
@@ -684,8 +677,6 @@ class _EditItemPageState extends State<EditItemPage> {
       ),
     );
   }
-
-  // ── Widget Helpers ──────────────────────────────────────────────────────────
 
   Widget _buildUploadDokumenBox() {
     final hasExisting = widget.item.dokumenNotaUrl != null;
@@ -849,7 +840,6 @@ class _EditItemPageState extends State<EditItemPage> {
     );
   }
 
-  // FIX: Tambahkan parameter inputFormatters
   Widget _buildTextField({
     String? hint,
     IconData? icon,
@@ -872,7 +862,7 @@ class _EditItemPageState extends State<EditItemPage> {
         maxLines: maxLines,
         enabled: enabled,
         keyboardType: keyboardType,
-        inputFormatters: inputFormatters, // Diaktifkan disini
+        inputFormatters: inputFormatters, 
         decoration: InputDecoration(
           hintText: hint,
           prefixText: prefixText,

@@ -81,7 +81,6 @@ class AprPerpanjanganTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-
         border: !isPending ? Border.all(color: Colors.grey.shade200) : null,
         boxShadow: isPending
             ? [
@@ -127,7 +126,7 @@ class AprPerpanjanganTab extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-
+                     
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -318,6 +317,7 @@ class AprPerpanjanganTab extends StatelessWidget {
     bool success = false;
 
     if (setujui) {
+      
       success = await approval.updateStatusPerpanjangan(
         perpanjanganId: p.id,
         status: 'disetujui',
@@ -325,6 +325,7 @@ class AprPerpanjanganTab extends StatelessWidget {
         tanggalBaruKembali: p.tanggalJatuhTempoBaru,
       );
     } else {
+     
       success = await approval.updateStatusPerpanjangan(
         perpanjanganId: p.id,
         status: 'ditolak',

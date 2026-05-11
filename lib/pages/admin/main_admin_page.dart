@@ -34,10 +34,10 @@ class _MainAdminPageState extends State<MainAdminPage> {
 
   void _initNotifications() {
     final notifProvider = context.read<NotificationProvider>();
-
+    // Fetch semua notifikasi + subscribe realtime tanpa filter userId
     notifProvider.fetchAllNotifications();
     notifProvider.subscribeAsAdmin();
-
+    // Cek jatuh tempo saat pertama kali buka
     notifProvider.checkAndNotifyOverdue();
   }
 
@@ -122,7 +122,10 @@ class _MainAdminPageState extends State<MainAdminPage> {
         leadingWidth: 46,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12, top: 10, bottom: 10),
-          child: Image.asset('assets/logo_inforsa.png', fit: BoxFit.contain),
+          child: Image.asset(
+            'assets/logo_inforsa.png',
+            fit: BoxFit.contain,
+          ),
         ),
         titleSpacing: 4,
         title: const Text(
@@ -134,6 +137,7 @@ class _MainAdminPageState extends State<MainAdminPage> {
           ),
         ),
         actions: [
+          // Badge notifikasi admin
           Stack(
             clipBehavior: Clip.none,
             children: [
@@ -175,7 +179,7 @@ class _MainAdminPageState extends State<MainAdminPage> {
                 ),
             ],
           ),
-
+         
           PopupMenuButton<String>(
             offset: const Offset(0, 48),
             onSelected: (value) {

@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// FILE: lib/pages/admin/approval_tabs/apr_peminjaman.dart
-// ─────────────────────────────────────────────────────────────────────────────
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -36,7 +32,7 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
 
     final paginatedItems = pendingList.isEmpty
         ? <PeminjamanModel>[]
-        : pendingList
+      : pendingList
               .skip((displayPage - 1) * _itemsPerPage)
               .take(_itemsPerPage)
               .toList();
@@ -164,9 +160,7 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
 
   IconData _getIconFor(String nama) {
     final n = nama.toLowerCase();
-    if (n.contains('laptop') ||
-        n.contains('macbook') ||
-        n.contains('komputer')) {
+    if (n.contains('laptop') || n.contains('macbook') || n.contains('komputer')) {
       return Icons.laptop_mac;
     }
     if (n.contains('camera') || n.contains('kamera') || n.contains('alpha')) {
@@ -282,7 +276,7 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
                             letterSpacing: 1.0,
                           ),
                         ),
-
+                    
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -356,11 +350,7 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.phone_android_outlined,
-                size: 16,
-                color: Colors.black54,
-              ),
+              const Icon(Icons.phone_android_outlined, size: 16, color: Colors.black54),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -441,24 +431,16 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
                             context: context,
                             builder: (_) => AlertDialog(
                               title: const Text('Tolak Peminjaman'),
-                              content: Text(
-                                'Tolak permohonan dari ${p.namaUser ?? '-'}?',
-                              ),
+                              content: Text('Tolak permohonan dari ${p.namaUser ?? '-'}?'),
                               actions: [
                                 TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
+                                  onPressed: () => Navigator.pop(context, false),
                                   child: const Text('Batal'),
                                 ),
                                 ElevatedButton(
                                   onPressed: () => Navigator.pop(context, true),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                  ),
-                                  child: const Text(
-                                    'Tolak',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                  child: const Text('Tolak', style: TextStyle(color: Colors.white)),
                                 ),
                               ],
                             ),
@@ -472,22 +454,14 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                success
-                                    ? 'Peminjaman ditolak'
-                                    : 'Gagal menolak peminjaman',
-                              ),
-                              backgroundColor: success
-                                  ? Colors.orange
-                                  : Colors.red,
+                              content: Text(success ? 'Peminjaman ditolak' : 'Gagal menolak peminjaman'),
+                              backgroundColor: success ? Colors.orange : Colors.red,
                             ),
                           );
                           if (success) {
                             await widget.onRefresh();
                             if (context.mounted) {
-                              await context
-                                  .read<DashboardProvider>()
-                                  .fetchDashboardData(silent: true);
+                              await context.read<DashboardProvider>().fetchDashboardData(silent: true);
                             }
                           }
                         },
@@ -504,24 +478,16 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
                             context: context,
                             builder: (_) => AlertDialog(
                               title: const Text('Setujui Peminjaman'),
-                              content: Text(
-                                'Setujui permohonan dari ${p.namaUser ?? '-'}?',
-                              ),
+                              content: Text('Setujui permohonan dari ${p.namaUser ?? '-'}?'),
                               actions: [
                                 TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
+                                  onPressed: () => Navigator.pop(context, false),
                                   child: const Text('Batal'),
                                 ),
                                 ElevatedButton(
                                   onPressed: () => Navigator.pop(context, true),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF114376),
-                                  ),
-                                  child: const Text(
-                                    'Setujui',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
+                                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF114376)),
+                                  child: const Text('Setujui', style: TextStyle(color: Colors.white)),
                                 ),
                               ],
                             ),
@@ -535,22 +501,14 @@ class _AprPeminjamanTabState extends State<AprPeminjamanTab> {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                success
-                                    ? 'Peminjaman disetujui'
-                                    : 'Gagal menyetujui peminjaman',
-                              ),
-                              backgroundColor: success
-                                  ? Colors.green
-                                  : Colors.red,
+                              content: Text(success ? 'Peminjaman disetujui' : 'Gagal menyetujui peminjaman'),
+                              backgroundColor: success ? Colors.green : Colors.red,
                             ),
                           );
                           if (success) {
                             await widget.onRefresh();
                             if (context.mounted) {
-                              await context
-                                  .read<DashboardProvider>()
-                                  .fetchDashboardData(silent: true);
+                              await context.read<DashboardProvider>().fetchDashboardData(silent: true);
                             }
                           }
                         },

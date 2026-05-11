@@ -62,7 +62,6 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     final authProvider = context.read<AuthProvider>();
-
     final success = await authProvider.register(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
@@ -133,6 +132,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 28),
 
+                // Nama
                 _buildField(
                   controller: _namaController,
                   label: 'Nama Lengkap',
@@ -144,6 +144,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 18),
 
+                // Departemen
                 const Text(
                   'Departemen',
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -192,6 +193,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 18),
 
+                // NIM / ID
                 _buildField(
                   controller: _nimController,
                   label: 'NIM / ID',
@@ -203,6 +205,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 18),
 
+                // Nomor WhatsApp
                 _buildField(
                   controller: _waController,
                   label: 'Nomor WhatsApp',
@@ -221,6 +224,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 18),
 
+                // Email
                 _buildField(
                   controller: _emailController,
                   label: 'Email',
@@ -240,6 +244,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 18),
 
+                // Password
                 _buildField(
                   controller: _passwordController,
                   label: 'Password',
@@ -257,6 +262,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 18),
 
+                // Konfirmasi Password
                 _buildField(
                   controller: _confirmPasswordController,
                   label: 'Konfirmasi Password',
@@ -276,6 +282,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 32),
 
+                // Tombol Daftar
                 SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -310,6 +317,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 24),
 
+                // Login Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

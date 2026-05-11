@@ -27,10 +27,7 @@ class InventoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchItems({
-    bool forceRefresh = false,
-    bool showLoading = true,
-  }) {
+  Future<void> fetchItems({bool forceRefresh = false, bool showLoading = true}) {
     if (_ongoingFetch != null) {
       return _ongoingFetch!;
     }
@@ -126,44 +123,37 @@ class InventoryProvider extends ChangeNotifier {
     _setLoading(true);
     _setError(null);
     try {
-      final itemData = await SupabaseService.table(
-        'barang',
-      ).select().eq('id', id).single();
+      final itemData = await SupabaseService.table('barang').select().eq('id', id).single();
       final item = ItemModel.fromMap(itemData);
-
-      final peminjamanList = await SupabaseService.table(
-        'peminjaman',
-      ).select('id').eq('barang_id', id);
-
+      final peminjamanList = await SupabaseService.table('peminjaman')
+          .select('id')
+          .eq('barang_id', id);
+      
       final peminjamanIds = (peminjamanList as List)
           .map((p) => p['id'] as String)
           .toList();
 
-      debugPrint(
-        'Found ${peminjamanIds.length} peminjaman records for barang_id: $id',
-      );
+      debugPrint('Found ${peminjamanIds.length} peminjaman records for barang_id: $id');
 
       if (peminjamanIds.isNotEmpty) {
         for (final peminjamanId in peminjamanIds) {
-          await SupabaseService.table(
-            'pengembalian',
-          ).delete().eq('peminjaman_id', peminjamanId);
+          await SupabaseService.table('pengembalian')
+              .delete()
+              .eq('peminjaman_id', peminjamanId);
         }
-        debugPrint(
-          'Deleted pengembalian records for peminjaman_ids: $peminjamanIds',
-        );
+        debugPrint('Deleted pengembalian records for peminjaman_ids: $peminjamanIds');
 
         for (final peminjamanId in peminjamanIds) {
-          await SupabaseService.table(
-            'perpanjangan',
-          ).delete().eq('peminjaman_id', peminjamanId);
+          await SupabaseService.table('perpanjangan')
+              .delete()
+              .eq('peminjaman_id', peminjamanId);
         }
-        debugPrint(
-          'Deleted perpanjangan records for peminjaman_ids: $peminjamanIds',
-        );
+        debugPrint('Deleted perpanjangan records for peminjaman_ids: $peminjamanIds');
       }
 
-      await SupabaseService.table('peminjaman').delete().eq('barang_id', id);
+      await SupabaseService.table('peminjaman')
+          .delete()
+          .eq('barang_id', id);
       debugPrint('Deleted peminjaman records for barang_id: $id');
 
       if (item.fotoUrl != null) {
@@ -195,8 +185,7 @@ class InventoryProvider extends ChangeNotifier {
     try {
       final uri = Uri.parse(url);
       final segments = uri.pathSegments;
-
-      final bucketIndex = segments.indexOf('public') + 2;
+      final bucketIndex = segments.indexOf('public') + 2; 
       if (bucketIndex < segments.length) {
         return segments.sublist(bucketIndex).join('/');
       }
@@ -218,16 +207,13 @@ class InventoryProvider extends ChangeNotifier {
         return null;
       }
 
-      debugPrint(
-        'uploadFotoBarang: Starting upload (${bytes.lengthInBytes} bytes)',
-      );
+      debugPrint('uploadFotoBarang: Starting upload (${bytes.lengthInBytes} bytes)');
 
-      final fileName =
-          '${itemCode}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      final fileName = '${itemCode}_${DateTime.now().millisecondsSinceEpoch}.$extension';
       final path = 'barang/$fileName';
-
+      
       debugPrint('uploadFotoBarang: Uploading to path: $path');
-
+      
       await SupabaseService.storage
           .from('foto_barang')
           .uploadBinary(
@@ -238,13 +224,11 @@ class InventoryProvider extends ChangeNotifier {
               upsert: true,
             ),
           );
-
+      
       debugPrint('uploadFotoBarang: Upload successful, getting public URL');
-      final publicUrl = SupabaseService.storage
-          .from('foto_barang')
-          .getPublicUrl(path);
+      final publicUrl = SupabaseService.storage.from('foto_barang').getPublicUrl(path);
       debugPrint('uploadFotoBarang: Public URL: $publicUrl');
-
+      
       return publicUrl;
     } on StorageException catch (e) {
       final errorMsg = 'Upload error: ${e.statusCode} - ${e.message}';
@@ -273,16 +257,13 @@ class InventoryProvider extends ChangeNotifier {
         return null;
       }
 
-      debugPrint(
-        'uploadDokumenNota: Starting upload (${bytes.lengthInBytes} bytes)',
-      );
-
-      final fileName =
-          '${itemCode}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      debugPrint('uploadDokumenNota: Starting upload (${bytes.lengthInBytes} bytes)');
+      
+      final fileName = '${itemCode}_${DateTime.now().millisecondsSinceEpoch}.$extension';
       final path = 'nota/$fileName';
-
+      
       debugPrint('uploadDokumenNota: Uploading to path: $path');
-
+      
       await SupabaseService.storage
           .from('dokumen_nota')
           .uploadBinary(
@@ -295,13 +276,11 @@ class InventoryProvider extends ChangeNotifier {
               upsert: true,
             ),
           );
-
+      
       debugPrint('uploadDokumenNota: Upload successful, getting public URL');
-      final publicUrl = SupabaseService.storage
-          .from('dokumen_nota')
-          .getPublicUrl(path);
+      final publicUrl = SupabaseService.storage.from('dokumen_nota').getPublicUrl(path);
       debugPrint('uploadDokumenNota: Public URL: $publicUrl');
-
+      
       return publicUrl;
     } on StorageException catch (e) {
       final errorMsg = 'Upload error: ${e.statusCode} - ${e.message}';
@@ -316,3 +295,4 @@ class InventoryProvider extends ChangeNotifier {
     }
   }
 }
+

@@ -51,11 +51,12 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF000080)),
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      home: const SplashScreen(), // ← diganti ke SplashScreen
     );
   }
 }
 
+// ─── Splash Screen ────────────────────────────────────────────────────────────
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -71,6 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
+
     await Future.delayed(const Duration(milliseconds: 300));
 
     if (!mounted) return;
@@ -82,12 +84,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (auth.isLoggedIn) {
       if (auth.isAdmin) {
+       
         try {
           await Future.wait([
             context.read<DashboardProvider>().fetchDashboardData(silent: true),
             context.read<InventoryProvider>().fetchItems(),
           ]);
-        } catch (_) {}
+        } catch (_) {
+          
+        }
       }
 
       Navigator.pushReplacement(

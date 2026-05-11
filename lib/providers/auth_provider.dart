@@ -21,13 +21,11 @@ class AuthProvider extends ChangeNotifier {
 
     final meta = user.userMetadata ?? const <String, dynamic>{};
     final nama = (meta['nama'] ?? meta['full_name'] ?? '').toString().trim();
-    final departemen = (meta['departemen'] ?? meta['department'] ?? '')
-        .toString()
-        .trim();
+    final departemen =
+        (meta['departemen'] ?? meta['department'] ?? '').toString().trim();
     final nim = (meta['nim'] ?? meta['student_id'] ?? '').toString().trim();
-    final noWhatsapp = (meta['no_whatsapp'] ?? meta['phone'] ?? '')
-        .toString()
-        .trim();
+    final noWhatsapp =
+        (meta['no_whatsapp'] ?? meta['phone'] ?? '').toString().trim();
 
     return base.copyWith(
       nama: nama.isNotEmpty ? nama : base.nama,
@@ -47,7 +45,8 @@ class AuthProvider extends ChangeNotifier {
 
     final isNamaPlaceholder =
         nama.isEmpty || nama == 'user baru' || nama == 'guest user';
-    final isDepartemenPlaceholder = departemen.isEmpty || departemen == '-';
+    final isDepartemenPlaceholder =
+        departemen.isEmpty || departemen == '-';
 
     return isNamaPlaceholder ||
         isDepartemenPlaceholder ||
@@ -58,18 +57,13 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> _syncProfileFromMetadata(User user) async {
     final meta = user.userMetadata ?? const <String, dynamic>{};
     final nama = (meta['nama'] ?? meta['full_name'] ?? '').toString().trim();
-    final departemen = (meta['departemen'] ?? meta['department'] ?? '')
-        .toString()
-        .trim();
+    final departemen =
+        (meta['departemen'] ?? meta['department'] ?? '').toString().trim();
     final nim = (meta['nim'] ?? meta['student_id'] ?? '').toString().trim();
-    final noWhatsapp = (meta['no_whatsapp'] ?? meta['phone'] ?? '')
-        .toString()
-        .trim();
+    final noWhatsapp =
+        (meta['no_whatsapp'] ?? meta['phone'] ?? '').toString().trim();
 
-    if (nama.isEmpty &&
-        departemen.isEmpty &&
-        nim.isEmpty &&
-        noWhatsapp.isEmpty) {
+    if (nama.isEmpty && departemen.isEmpty && nim.isEmpty && noWhatsapp.isEmpty) {
       return false;
     }
 
@@ -109,12 +103,10 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (response.user != null) {
-        // Cek role dari user_metadata
+
         final meta = response.user!.userMetadata;
         _isAdmin = meta?['role'] == 'admin';
 
-        // Fetch profile hanya kalau bukan admin
-        // (admin tidak perlu ada di tabel users)
         if (!_isAdmin) {
           await _fetchProfile(response.user!.id);
           if (_isPlaceholderProfile(_currentUser)) {
@@ -124,7 +116,6 @@ class AuthProvider extends ChangeNotifier {
             }
           }
         } else {
-          // Buat UserModel sementara untuk admin
           _currentUser = UserModel(
             id: response.user!.id,
             nama: 'Admin',
@@ -149,56 +140,50 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<bool> register({
-    required String email,
-    required String password,
-    required String nama,
-    required String nim, // Tambahkan ini
-    required String noWhatsapp, // Tambahkan ini
-    required String departemen,
-  }) async {
-    _setLoading(true);
-    try {
-      // 1. Mendaftarkan user ke Supabase Auth
-      final AuthResponse res = await SupabaseService.auth.signUp(
-        email: email,
-        password: password,
-        data: {
+  required String email,
+  required String password,
+  required String nama,
+  required String nim,          
+  required String noWhatsapp,  
+  required String departemen,
+}) async {
+  _setLoading(true);
+  try {
+   
+    final AuthResponse res = await SupabaseService.auth.signUp(
+      email: email,
+      password: password,
+      data: {
+        'nama': nama,
+        'departemen': departemen,
+        'nim': nim,
+        'no_whatsapp': noWhatsapp,
+      },
+    );
+
+    if (res.user != null) {
+      try {
+        await SupabaseService.table('users').update({
           'nama': nama,
-          'departemen': departemen,
           'nim': nim,
           'no_whatsapp': noWhatsapp,
-        },
-      );
-
-      if (res.user != null) {
-        // 2. Memasukkan data tambahan ke tabel 'users' (atau 'profiles')
-        // Pastikan nama kolom sesuai dengan yang ada di Supabase Anda
-        // Best-effort saja: jika RLS menolak, registrasi tetap dianggap berhasil
-        // karena metadata auth sudah tersimpan.
-        try {
-          await SupabaseService.table('users')
-              .update({
-                'nama': nama,
-                'nim': nim,
-                'no_whatsapp': noWhatsapp,
-                'departemen': departemen,
-              })
-              .eq('id', res.user!.id);
-        } catch (e) {
-          print('Sinkronisasi tabel users saat register dilewati: $e');
-        }
-
-        return true;
+          'departemen': departemen,
+        }).eq('id', res.user!.id);
+      } catch (e) {
+        print('Sinkronisasi tabel users saat register dilewati: $e');
       }
-      return false;
-    } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-      return false;
-    } finally {
-      _setLoading(false);
+      
+      return true;
     }
+    return false;
+  } catch (e) {
+    _errorMessage = e.toString();
+    notifyListeners();
+    return false;
+  } finally {
+    _setLoading(false);
   }
+}
 
   Future<void> updatePassword(String newPassword) async {
     await SupabaseService.auth.updateUser(
@@ -213,7 +198,6 @@ class AuthProvider extends ChangeNotifier {
       ).select().eq('id', userId).single();
       var fetchedUser = UserModel.fromMap(data);
 
-      // Jika row DB masih placeholder, tampilkan fallback dari metadata auth
       if (_isPlaceholderProfile(fetchedUser)) {
         fetchedUser = _applyMetadataFallback(
           fetchedUser,
@@ -232,7 +216,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error fetching profile: $e');
-      // User belum ada di tabel users (admin langsung dari Supabase)
       _currentUser = null;
     }
   }
@@ -241,10 +224,8 @@ class AuthProvider extends ChangeNotifier {
     final user = SupabaseService.auth.currentUser;
     if (user == null) return;
 
-    // Fetch profile terbaru dari database
     await _fetchProfile(user.id);
 
-    // Cek apakah profile placeholder, jika ya sync dari metadata
     if (_isPlaceholderProfile(_currentUser)) {
       final synced = await _syncProfileFromMetadata(user);
       if (synced) {
@@ -265,7 +246,6 @@ class AuthProvider extends ChangeNotifier {
     try {
       print('Updating profile untuk user: ${_currentUser!.id}');
 
-      // Update database
       await SupabaseService.table('users')
           .update({
             'nama': nama,
@@ -276,7 +256,6 @@ class AuthProvider extends ChangeNotifier {
           })
           .eq('id', _currentUser!.id);
 
-      // Update metadata juga untuk backup sync
       await SupabaseService.auth.updateUser(
         UserAttributes(
           data: {
@@ -298,10 +277,10 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
 
       await _fetchProfile(_currentUser!.id);
-
+      
       print('Profile fetched successfully');
-
-      _setError(null); // Clear any previous errors
+      
+      _setError(null); 
       return true;
     } catch (e) {
       print('Error updating profile: $e');

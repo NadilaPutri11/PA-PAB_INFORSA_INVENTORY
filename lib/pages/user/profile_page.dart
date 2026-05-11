@@ -17,7 +17,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-
+  
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
       authProvider.refreshProfile();
@@ -254,11 +254,13 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 16),
 
+            // Tombol Chat Admin (Link WA Tersemat)
             SizedBox(
               width: double.infinity,
               height: 50,
               child: OutlinedButton(
-                onPressed: () => _openWhatsAppLink(),
+                onPressed: () =>
+                    _openWhatsAppLink(), // Memanggil link https://wa.me/6281350918562
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Color(0xFF000080)),
                   shape: RoundedRectangleBorder(
@@ -278,6 +280,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             const SizedBox(height: 12),
 
+            // Tombol Informasi Lainnya
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -328,7 +331,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  static void _naviateToPage(int index) {}
+  static void _naviateToPage(int index) {
+  }
 
   Widget _buildProfileInfo(dynamic user, String? email) {
     return Column(
@@ -427,7 +431,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     showDialog(
       context: context,
-      barrierDismissible: !isAutoEdit,
+      barrierDismissible: !isAutoEdit, 
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) {
           bool isSaving = false;
