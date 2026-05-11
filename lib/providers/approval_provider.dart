@@ -85,7 +85,6 @@ class ApprovalProvider extends ChangeNotifier {
       );
       return;
     } catch (e) {
-<<<<<<< HEAD
       debugPrint(
         'RPC increment_item_stock unavailable, fallback update volume: $e',
       );
@@ -101,49 +100,6 @@ class ApprovalProvider extends ChangeNotifier {
     await SupabaseService.table(
       'barang',
     ).update({'volume': currentVolume + 1}).eq('id', barangId);
-  }
-
-  Future<void> _decrementItemStockSafely(String barangId) async {
-    try {
-      await SupabaseService.client.rpc(
-        'decrement_item_stock',
-        params: {'target_id': barangId},
-      );
-      return;
-    } catch (e) {
-      debugPrint(
-        'RPC decrement_item_stock unavailable, fallback update volume: $e',
-      );
-    }
-
-    final barang = await SupabaseService.table(
-      'barang',
-    ).select('volume').eq('id', barangId).single();
-    final currentVolume = (barang['volume'] is num)
-        ? (barang['volume'] as num).toInt()
-        : 0;
-
-    // Pastikan volume tidak minus
-    if (currentVolume > 0) {
-      await SupabaseService.table(
-        'barang',
-      ).update({'volume': currentVolume - 1}).eq('id', barangId);
-    }
-=======
-      debugPrint('RPC increment_item_stock unavailable, fallback update volume: $e');
-    }
-
-    // Fallback jika fungsi RPC belum dibuat di database.
-    final barang = await SupabaseService.table('barang')
-        .select('volume')
-        .eq('id', barangId)
-        .single();
-    final currentVolume =
-        (barang['volume'] is num) ? (barang['volume'] as num).toInt() : 0;
-
-    await SupabaseService.table('barang')
-        .update({'volume': currentVolume + 1}).eq('id', barangId);
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
   }
 
   Future<List<PeminjamanModel>> _mapPeminjamanWithFallback(List data) async {
@@ -231,7 +187,6 @@ class ApprovalProvider extends ChangeNotifier {
 
     final meta = authUser.userMetadata ?? const <String, dynamic>{};
     final nama = (meta['nama'] ?? meta['full_name'] ?? '').toString().trim();
-<<<<<<< HEAD
     final departemen = (meta['departemen'] ?? meta['department'] ?? '')
         .toString()
         .trim();
@@ -244,20 +199,10 @@ class ApprovalProvider extends ChangeNotifier {
         departemen.isEmpty &&
         nim.isEmpty &&
         noWhatsapp.isEmpty) {
-=======
-    final departemen =
-        (meta['departemen'] ?? meta['department'] ?? '').toString().trim();
-    final nim = (meta['nim'] ?? meta['student_id'] ?? '').toString().trim();
-    final noWhatsapp =
-        (meta['no_whatsapp'] ?? meta['phone'] ?? '').toString().trim();
-
-    if (nama.isEmpty && departemen.isEmpty && nim.isEmpty && noWhatsapp.isEmpty) {
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       return;
     }
 
     try {
-<<<<<<< HEAD
       await SupabaseService.table('users')
           .update({
             'nama': nama.isEmpty ? 'User Baru' : nama,
@@ -267,17 +212,6 @@ class ApprovalProvider extends ChangeNotifier {
           })
           .eq('id', userId);
     } catch (_) {}
-=======
-      await SupabaseService.table('users').update({
-        'nama': nama.isEmpty ? 'User Baru' : nama,
-        'departemen': departemen.isEmpty ? '-' : departemen,
-        'nim': nim.isEmpty ? null : nim,
-        'no_whatsapp': noWhatsapp.isEmpty ? null : noWhatsapp,
-      }).eq('id', userId);
-    } catch (_) {
-      // Best effort saja; jangan blokir submit peminjaman jika RLS menolak.
-    }
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
   }
 
   Future<void> _refreshAllAdminApprovalLists() async {
@@ -288,11 +222,6 @@ class ApprovalProvider extends ChangeNotifier {
       fetchPerpanjangan(emitLoading: false),
     ]);
   }
-<<<<<<< HEAD
-=======
-
-  // ── Fetching ──────────────────────────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
 
   Future<void> fetchAllForAdmin() async {
     _setLoading(true);
@@ -373,13 +302,9 @@ class ApprovalProvider extends ChangeNotifier {
       final data = await SupabaseService.table('peminjaman')
           .select('*, barang(*)')
           .eq('user_id', userId)
-<<<<<<< HEAD
           .or(
             'status.eq.disetujui,status.eq.menunggu_konfirmasi,status.eq.menunggu',
           )
-=======
-          .or('status.eq.disetujui,status.eq.menunggu_konfirmasi,status.eq.menunggu')
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
           .order('created_at', ascending: false);
       _activePeminjaman = (data as List)
           .map((e) => PeminjamanModel.fromMap(e))
@@ -474,11 +399,6 @@ class ApprovalProvider extends ChangeNotifier {
     await SupabaseService.client.removeChannel(channel);
     _adminApprovalChannel = null;
   }
-<<<<<<< HEAD
-=======
-
-  // ── Submissions ────────────────────────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
 
   Future<bool> submitPeminjaman({
     required String userId,
@@ -491,10 +411,6 @@ class ApprovalProvider extends ChangeNotifier {
     try {
       _setError(null);
 
-<<<<<<< HEAD
-=======
-      // Upayakan sinkronisasi data user terbaru agar tampilan approvals admin konsisten.
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       await _trySyncCurrentUserRowFromMetadata(userId);
 
       await SupabaseService.table('peminjaman').insert({
@@ -507,15 +423,7 @@ class ApprovalProvider extends ChangeNotifier {
         'status': 'menunggu',
       });
 
-<<<<<<< HEAD
-      await _decrementItemStockSafely(barangId);
-
       try {
-=======
-      // ── NOTIFIKASI ADMIN (REAL-TIME) ─────────────────────────────────────────
-      try {
-        // Ambil info user & barang untuk pesan notifikasi
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         final userRes = await SupabaseService.table(
           'users',
         ).select('nama').eq('id', userId).single();
@@ -524,27 +432,15 @@ class ApprovalProvider extends ChangeNotifier {
         ).select('nama_barang').eq('id', barangId).single();
 
         await SupabaseService.table('notifications').insert({
-<<<<<<< HEAD
           'user_id': null,
-=======
-          'user_id': null, // null berarti untuk admin/semua
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
           'title': 'Permohonan Peminjaman Baru',
           'message':
               '${userRes['nama']} mengajukan peminjaman ${barangRes['nama_barang']}',
           'type': 'peminjaman',
           'is_read': false,
         });
-      } catch (e) {
-        // Abaikan error notifikasi agar submit peminjaman tetap sukses.
-      }
-<<<<<<< HEAD
+      } catch (e) {}
 
-=======
-      // ─────────────────────────────────────────────────────────────────────────
-
-      // Refresh data user agar tab Activity langsung ter-update.
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       await fetchUserPeminjaman(userId);
 
       return true;
@@ -576,10 +472,6 @@ class ApprovalProvider extends ChangeNotifier {
         'peminjaman',
       ).update({'status': 'menunggu_konfirmasi'}).eq('id', peminjamanId);
 
-<<<<<<< HEAD
-=======
-      // ── NOTIFIKASI ADMIN (REAL-TIME) ─────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       try {
         final pRes = await SupabaseService.table('peminjaman')
             .select('users(nama), barang(nama_barang)')
@@ -597,10 +489,6 @@ class ApprovalProvider extends ChangeNotifier {
       } catch (e) {
         debugPrint('Error sending admin notification: $e');
       }
-<<<<<<< HEAD
-=======
-      // ─────────────────────────────────────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
 
       return true;
     } catch (e) {
@@ -630,129 +518,18 @@ class ApprovalProvider extends ChangeNotifier {
     required String alasan,
   }) async {
     _setLoading(true);
-    _setError(null);
     try {
-<<<<<<< HEAD
-=======
-      // Cegah submit dobel jika masih ada permintaan menunggu.
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
-      final existingPending = await SupabaseService.table('perpanjangan')
-          .select('id')
-          .eq('peminjaman_id', peminjamanId)
-          .eq('status', 'menunggu')
-          .limit(1);
-
-      if ((existingPending as List).isNotEmpty) {
-        _setError('Permintaan perpanjangan sebelumnya masih diproses admin.');
-        return false;
-      }
-
-      final sessionUserId = SupabaseService.client.auth.currentUser?.id;
-      if (sessionUserId == null) {
-        _setError('Sesi login tidak ditemukan. Silakan login ulang.');
-        return false;
-      }
-
-<<<<<<< HEAD
-      final pinjamData = await SupabaseService.table(
-        'peminjaman',
-      ).select('user_id').eq('id', peminjamanId).single();
-      final ownerUserId = pinjamData['user_id']?.toString();
-      if (ownerUserId == null || ownerUserId != sessionUserId) {
-        _setError(
-          'Anda tidak memiliki akses untuk perpanjangan peminjaman ini.',
-        );
-        return false;
-      }
-
-=======
-      // Validasi kepemilikan peminjaman agar sesuai policy RLS berbasis auth.uid().
-      final pinjamData = await SupabaseService.table('peminjaman')
-          .select('user_id')
-          .eq('id', peminjamanId)
-          .single();
-      final ownerUserId = pinjamData['user_id']?.toString();
-      if (ownerUserId == null || ownerUserId != sessionUserId) {
-        _setError('Anda tidak memiliki akses untuk perpanjangan peminjaman ini.');
-        return false;
-      }
-
-      // 1. Simpan record perpanjangan dengan beberapa variasi payload
-      // untuk kompatibilitas lintas skema (kolom lama/baru).
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
-      final payloadVariants = <Map<String, dynamic>>[
-        {
-          'peminjaman_id': peminjamanId,
-          'user_id': sessionUserId,
-          'tanggal_jatuh_tempo_baru': tanggalBaru.toIso8601String(),
-          'alasan_perpanjangan': alasan,
-          'status': 'menunggu',
-        },
-        {
-          'peminjaman_id': peminjamanId,
-          'user_id': sessionUserId,
-          'rencana_kembali_baru': tanggalBaru.toIso8601String(),
-          'alasan_perpanjangan': alasan,
-          'status': 'menunggu',
-        },
-        {
-          'peminjaman_id': peminjamanId,
-          'tanggal_jatuh_tempo_baru': tanggalBaru.toIso8601String(),
-          'alasan_perpanjangan': alasan,
-          'status': 'menunggu',
-        },
-        {
-          'peminjaman_id': peminjamanId,
-          'rencana_kembali_baru': tanggalBaru.toIso8601String(),
-          'alasan_perpanjangan': alasan,
-          'status': 'menunggu',
-        },
-      ];
-
-      PostgrestException? lastSchemaException;
-      var inserted = false;
-
-      for (final payload in payloadVariants) {
-        try {
-          await SupabaseService.table('perpanjangan').insert(payload);
-          inserted = true;
-          break;
-        } on PostgrestException catch (e) {
-          final lowerMessage = e.message.toLowerCase();
-          final lowerDetails = (e.details?.toString() ?? '').toLowerCase();
-          final isSchemaMismatch =
-              lowerMessage.contains('column') ||
-              lowerDetails.contains('column') ||
-              lowerMessage.contains('tanggal_jatuh_tempo_baru') ||
-              lowerDetails.contains('tanggal_jatuh_tempo_baru') ||
-              lowerMessage.contains('rencana_kembali_baru') ||
-              lowerDetails.contains('rencana_kembali_baru') ||
-              lowerMessage.contains('user_id') ||
-              lowerDetails.contains('user_id');
-
-          if (!isSchemaMismatch) {
-            rethrow;
-          }
-
-          lastSchemaException = e;
-        }
-      }
-
-      if (!inserted) {
-        if (lastSchemaException != null) {
-          throw lastSchemaException;
-        }
-        throw Exception('Gagal menyimpan data perpanjangan.');
-      }
+      await SupabaseService.table('perpanjangan').insert({
+        'peminjaman_id': peminjamanId,
+        'rencana_kembali_baru': tanggalBaru.toIso8601String(),
+        'alasan_perpanjangan': alasan,
+        'status': 'menunggu',
+      });
 
       await SupabaseService.table(
         'peminjaman',
       ).update({'status': 'menunggu_konfirmasi'}).eq('id', peminjamanId);
 
-<<<<<<< HEAD
-=======
-      // ── NOTIFIKASI ADMIN (REAL-TIME) ─────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       try {
         final pRes = await SupabaseService.table('peminjaman')
             .select('users(nama), barang(nama_barang)')
@@ -770,24 +547,9 @@ class ApprovalProvider extends ChangeNotifier {
       } catch (e) {
         debugPrint('Error sending admin notification: $e');
       }
-<<<<<<< HEAD
-=======
-      // ─────────────────────────────────────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
 
       return true;
-    } on PostgrestException catch (e) {
-      final detailsText = e.details?.toString();
-      final parts = <String>[
-        if (e.message.isNotEmpty) e.message,
-        if (detailsText != null && detailsText.isNotEmpty) detailsText,
-      ];
-      final readable = parts.join(' | ');
-      _setError('Gagal mengajukan perpanjangan: $readable');
-      debugPrint('Error submitPerpanjangan: $readable');
-      return false;
     } catch (e) {
-      _setError('Gagal mengajukan perpanjangan: $e');
       debugPrint('Error submitPerpanjangan: $e');
       return false;
     } finally {
@@ -831,18 +593,6 @@ class ApprovalProvider extends ChangeNotifier {
       ).update({'status': 'selesai'}).eq('id', pengembalianId);
 
       if (peminjamanId != null) {
-<<<<<<< HEAD
-=======
-        // 2. Ambil data peminjaman untuk dapat barang_id
-        final peminjamanData = await SupabaseService.table('peminjaman')
-            .select('barang_id, user_id, barang(nama_barang)')
-            .eq('id', peminjamanId)
-            .single();
-        final barangId = peminjamanData['barang_id'];
-        final userId = peminjamanData['user_id'];
-        final assetName = peminjamanData['barang']['nama_barang'];
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
-
         final peminjamanData = await SupabaseService.table('peminjaman')
             .select('barang_id, user_id, barang(nama_barang)')
             .eq('id', peminjamanId)
@@ -855,15 +605,8 @@ class ApprovalProvider extends ChangeNotifier {
           'peminjaman',
         ).update({'status': 'selesai'}).eq('id', peminjamanId);
 
-<<<<<<< HEAD
         await _incrementItemStockSafely(barangId);
 
-=======
-        // 4. Kembalikan stok secara atomik
-        await _incrementItemStockSafely(barangId);
-
-        // ── NOTIFIKASI USER (REAL-TIME) ─────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         try {
           await SupabaseService.table('notifications').insert({
             'user_id': userId,
@@ -876,10 +619,6 @@ class ApprovalProvider extends ChangeNotifier {
         } catch (e) {
           debugPrint('Error sending user notification: $e');
         }
-<<<<<<< HEAD
-=======
-        // ─────────────────────────────────────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       }
 
       await _refreshAllAdminApprovalLists();
@@ -920,11 +659,7 @@ class ApprovalProvider extends ChangeNotifier {
               'status': 'disetujui',
             })
             .eq('id', peminjamanId);
-<<<<<<< HEAD
-=======
 
-        // ── NOTIFIKASI USER (REAL-TIME) ─────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         try {
           await SupabaseService.table('notifications').insert({
             'user_id': userId,
@@ -937,12 +672,7 @@ class ApprovalProvider extends ChangeNotifier {
         } catch (e) {
           debugPrint('Error sending user notification: $e');
         }
-<<<<<<< HEAD
-=======
-        // ─────────────────────────────────────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       } else if (status == 'ditolak' && peminjamanId != null) {
-
         await SupabaseService.table(
           'peminjaman',
         ).update({'status': 'disetujui'}).eq('id', peminjamanId);
@@ -964,29 +694,15 @@ class ApprovalProvider extends ChangeNotifier {
     String filePrefix,
   ) async {
     try {
-<<<<<<< HEAD
-
       final normalizedPrefix = filePrefix.trim().isEmpty
           ? 'kondisi'
           : filePrefix.trim();
       final fileName =
           '${normalizedPrefix}_${DateTime.now().millisecondsSinceEpoch}.$extension';
       final path = 'pengembalian/$fileName';
+
       const bucketName = 'foto_barang';
 
-=======
-      // Gunakan prefix + timestamp untuk unik dan cache busting
-      final normalizedPrefix = filePrefix.trim().isEmpty
-          ? 'kondisi'
-          : filePrefix.trim();
-      final fileName =
-          '${normalizedPrefix}_${DateTime.now().millisecondsSinceEpoch}.$extension';
-      final path = 'pengembalian/$fileName';
-      // Gunakan bucket yang sudah tersedia di project.
-      const bucketName = 'foto_barang';
-
-      // Gunakan FileOptions untuk menentukan contentType sesuai batasan di Supabase
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
       await SupabaseService.storage
           .from(bucketName)
           .uploadBinary(

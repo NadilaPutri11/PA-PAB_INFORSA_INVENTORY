@@ -120,6 +120,7 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 48),
 
+              // ── Form ─────────────────────────────────────
               Form(
                 key: _formKey,
                 child: Column(

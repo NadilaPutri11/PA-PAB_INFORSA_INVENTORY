@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/approval_provider.dart';
 import '../../../models/item_model.dart';
 import 'dart:typed_data';
-import 'package:vibration/vibration.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:async';
 
 class PeminjamanPage extends StatefulWidget {
   final ItemModel? item;
@@ -45,7 +43,6 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
         _returnDate == null ||
         _foto1 == null ||
         _foto2 == null) {
-      Vibration.vibrate(pattern: [0, 150, 100, 150]);
       _showSnackBar(
         'Mohon lengkapi tanggal dan lampirkan 2 foto kondisi',
         isError: true,
@@ -60,9 +57,9 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
       final approval = context.read<ApprovalProvider>();
 
       final String? url1 = await approval.uploadFotoKondisi(
-        _foto1!, 
+        _foto1!,
         'jpg',
-        'pjm_front_${DateTime.now().millisecondsSinceEpoch}', 
+        'pjm_front_${DateTime.now().millisecondsSinceEpoch}',
       );
 
       final String? url2 = await approval.uploadFotoKondisi(
@@ -81,7 +78,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
         tanggalPinjam: _borrowDate!,
         rencanaKembali: _returnDate!,
         alasan: _alasanController.text.trim(),
-        fotoUrl: combinedUrls, 
+        fotoUrl: combinedUrls,
       );
 
       if (success && mounted) {
@@ -100,13 +97,10 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
   @override
   Widget build(BuildContext context) {
     final fmt = DateFormat('dd MMM yyyy', 'id');
+    // Ambil data user dari AuthProvider
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
 
-<<<<<<< HEAD
-=======
-    // Gunakan post-frame callback untuk set state agar tidak terjadi rebuild loop
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     if (_selectedDepartment == null && user != null) {
       _selectedDepartment = user.departemen;
     }
@@ -122,14 +116,7 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
         ),
         title: const Text(
           'Form Peminjaman',
-<<<<<<< HEAD
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-=======
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         ),
         centerTitle: true,
       ),
@@ -167,7 +154,6 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 24),
 
-            // 1. NAMA PEMINJAM (Auto-fill)
             _buildSectionLabel('NAMA PEMINJAM'),
             _buildReadOnlyField(
               user?.nama ?? 'Nama tidak ditemukan',
@@ -175,7 +161,6 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 20),
 
-            // 2. DEPARTEMEN (Auto-fill)
             _buildSectionLabel('DEPARTEMEN'),
             _buildReadOnlyField(
               user?.departemen ?? 'Departemen tidak ditemukan',
@@ -183,7 +168,6 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 20),
 
-            // 3. NAMA BARANG
             _buildSectionLabel('ASET YANG DIPINJAM'),
             _buildReadOnlyField(
               widget.item?.namaBarang ?? '-',
@@ -191,7 +175,6 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 20),
 
-            // 4. RENCANA PINJAM & KEMBALI
             Row(
               children: [
                 Expanded(
@@ -205,14 +188,9 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
                             context: context,
                             initialDate: DateTime.now(),
                             firstDate: DateTime.now(),
-<<<<<<< HEAD
                             lastDate: DateTime.now().add(
                               const Duration(days: 30),
                             ),
-=======
-                            lastDate:
-                                DateTime.now().add(const Duration(days: 30)),
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                           );
                           if (d != null) setState(() => _borrowDate = d);
                         },
@@ -233,14 +211,9 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
                             context: context,
                             initialDate: _borrowDate ?? DateTime.now(),
                             firstDate: _borrowDate ?? DateTime.now(),
-<<<<<<< HEAD
                             lastDate: DateTime.now().add(
                               const Duration(days: 60),
                             ),
-=======
-                            lastDate:
-                                DateTime.now().add(const Duration(days: 60)),
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
                           );
                           if (d != null) setState(() => _returnDate = d);
                         },
@@ -253,7 +226,6 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 20),
 
-            // Foto Kondisi
             _buildSectionLabel('FOTO KONDISI ASET (WAJIB)'),
             Row(
               children: [
@@ -264,7 +236,6 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 20),
 
-            // 6. ALASAN PEMINJAMAN
             _buildSectionLabel('ALASAN PEMINJAMAN'),
             TextField(
               controller: _alasanController,
@@ -283,7 +254,6 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
             ),
             const SizedBox(height: 40),
 
-            // TOMBOL KIRIM
             SizedBox(
               width: double.infinity,
               height: 54,
@@ -399,23 +369,18 @@ class _PeminjamanPageState extends State<PeminjamanPage> {
     );
   }
 
-  final ImagePicker _picker = ImagePicker();
-
   Future<void> _pickImage(bool isDepan) async {
-    final XFile? photo = await _picker.pickImage(
-      source: ImageSource.camera, 
-      imageQuality:
-          75, 
+    final result = await FilePicker.pickFiles(
+      type: FileType.image,
+      withData: true,
     );
 
-    if (photo != null) {
-      final Uint8List photoBytes = await photo.readAsBytes();
-
+    if (result != null && result.files.single.bytes != null) {
       setState(() {
         if (isDepan) {
-          _foto1 = photoBytes;
+          _foto1 = result.files.single.bytes;
         } else {
-          _foto2 = photoBytes;
+          _foto2 = result.files.single.bytes;
         }
       });
     }

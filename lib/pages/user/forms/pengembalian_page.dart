@@ -1,12 +1,10 @@
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'dart:typed_data';
 import '../../../providers/approval_provider.dart';
 import '../../../models/peminjaman_model.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:vibration/vibration.dart';
 
 class PengembalianPage extends StatefulWidget {
   final PeminjamanModel peminjaman;
@@ -29,116 +27,33 @@ class _PengembalianPageState extends State<PengembalianPage> {
     super.dispose();
   }
 
-  final ImagePicker _picker = ImagePicker();
-
   Future<void> _pickImage(bool isDepan) async {
-    final XFile? photo = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 75, 
+    final result = await FilePicker.pickFiles(
+      type: FileType.image,
+      withData: true,
     );
-
-    if (photo != null) {
-     
-      final Uint8List photoBytes = await photo.readAsBytes();
-
+    if (result != null && result.files.single.bytes != null) {
       setState(() {
         if (isDepan) {
-          _fotoDepan =
-              photoBytes; 
+          _fotoDepan = result.files.single.bytes;
         } else {
-          _fotoBelakang =
-              photoBytes; 
+          _fotoBelakang = result.files.single.bytes;
         }
       });
     }
   }
 
-  // ===== FUNGSI SENSOR LOKASI (GEOFENCING) =====
-  Future<bool> _verifyLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // 1. Cek apakah GPS HP menyala
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      _showSnackBar('Harap aktifkan GPS / Lokasi HP Anda', isError: true);
-      return false;
-    }
-
-    // 2. Cek izin aplikasi
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        _showSnackBar('Izin lokasi ditolak', isError: true);
-        return false;
-      }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      _showSnackBar(
-        'Izin lokasi diblokir permanen di pengaturan HP',
-        isError: true,
-      );
-      return false;
-    }
-
-    // 3. Ambil koordinat HP saat ini
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    // 4. Tentukan Koordinat Gudang / Kampus (Titik Pusat)
-    double gudangLat = -0.46724599592003246; // Latitude 
-    double gudangLng = 117.15718250589005; // Longitude 
-
-    // 5. Hitung jarak HP dengan Gudang (dalam satuan meter)
-    double distanceInMeters = Geolocator.distanceBetween(
-      position.latitude,
-      position.longitude,
-      gudangLat,
-      gudangLng,
-    );
-
-    // 6. Validasi Radius (Contoh: Maksimal 100 meter dari titik)
-    if (distanceInMeters > 100) {
-      // Getar error karena di luar jangkauan
-      Vibration.vibrate(pattern: [0, 150, 100, 150]);
-      _showSnackBar(
-        'Gagal! Anda berjarak ${distanceInMeters.toStringAsFixed(0)} meter. Harap kembalikan barang langsung di area gudang.',
-        isError: true,
-      );
-      return false;
-    }
-
-    return true; 
-  }
-
   Future<void> _handleSubmit() async {
-    // Getaran awal
-    Vibration.vibrate(duration: 200);
-
-    // Cek foto dulu
     if (_fotoDepan == null || _fotoBelakang == null) {
-      Vibration.vibrate(pattern: [0, 150, 100, 150]);
       _showSnackBar('Harap upload foto depan dan belakang', isError: true);
       return;
     }
 
-    // ===== CEK LOKASI SEBELUM UPLOAD =====
-    // Tampilkan loading sebentar saat mencari sinyal satelit
     setState(() => _isUploading = true);
-
-    bool isLocationValid = await _verifyLocation();
-
-    if (!isLocationValid) {
-      setState(() => _isUploading = false);
-      return; 
-    }
 
     try {
       final approval = context.read<ApprovalProvider>();
 
-      // Step 1: Upload foto ke bucket masing-masing
       String? urlDepan;
       String? urlBelakang;
 
@@ -157,7 +72,6 @@ class _PengembalianPageState extends State<PengembalianPage> {
         throw 'Gagal upload foto: $e';
       }
 
-      // Step 2: Kirim data ke tabel pengembalian
       final success = await approval.submitPengembalian(
         peminjamanId: widget.peminjaman.id,
         fotoDepanUrl: urlDepan!,

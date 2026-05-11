@@ -51,12 +51,11 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF000080)),
         useMaterial3: true,
       ),
-      home: const SplashScreen(), // ← diganti ke SplashScreen
+      home: const SplashScreen(),
     );
   }
 }
 
-// ─── Splash Screen ────────────────────────────────────────────────────────────
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -72,7 +71,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
-
     await Future.delayed(const Duration(milliseconds: 300));
 
     if (!mounted) return;
@@ -84,23 +82,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (auth.isLoggedIn) {
       if (auth.isAdmin) {
-<<<<<<< HEAD
-       
-=======
-        // Prefetch data admin saat splash agar dashboard langsung terisi.
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
         try {
           await Future.wait([
             context.read<DashboardProvider>().fetchDashboardData(silent: true),
             context.read<InventoryProvider>().fetchItems(),
           ]);
-        } catch (_) {
-<<<<<<< HEAD
-          
-=======
-          // Jika prefetch gagal, tetap lanjut ke halaman admin.
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
-        }
+        } catch (_) {}
       }
 
       Navigator.pushReplacement(

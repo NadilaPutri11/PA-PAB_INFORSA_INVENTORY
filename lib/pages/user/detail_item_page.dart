@@ -38,7 +38,7 @@ class DetailItemPage extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-     
+      // ← UserNavbar dihapus
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
         child: Column(

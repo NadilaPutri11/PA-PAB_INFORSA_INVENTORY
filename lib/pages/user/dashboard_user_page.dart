@@ -53,10 +53,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
     final menunggu = approval.peminjaman.where((p) => p.isMenunggu).toList();
     final terlambat = approval.terlambat;
 
-<<<<<<< HEAD
-=======
-    // Tampilkan hanya data barang dengan status "dipinjam" milik user yang login dan masih dalam rentang tanggal peminjaman
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     final peminjamanAktif = approval.peminjaman
         .where(
           (p) =>
@@ -65,7 +61,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
         )
         .toList();
 
-    // Filter search
     final filtered = _searchQuery.isEmpty
         ? peminjamanAktif
         : peminjamanAktif
@@ -113,7 +108,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
               ),
               const SizedBox(height: 20),
 
-              // Summary card — Peminjaman Aktif
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -209,7 +203,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
               ),
               const SizedBox(height: 16),
 
-              // Summary cards — Menunggu & Jatuh Tempo 
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -326,7 +319,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
               ),
               const SizedBox(height: 24),
 
-              // Search bar
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
@@ -365,8 +357,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Header list
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -382,7 +372,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
               ),
               const SizedBox(height: 16),
 
-              // Tabel Peminjaman Aktif (Redesign)
               _buildPeminjamanTable(filtered),
 
               if (!_showAllHistory && filtered.length > 5)
@@ -414,7 +403,7 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
 
-    // Filter: < 3 hari sebelum jatuh tempo jika tidak show all
+    //
     final now = DateTime.now();
     List<PeminjamanModel> displayData = allData;
 
@@ -428,7 +417,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> {
         displayData = displayData.take(5).toList();
       }
     } else {
-      // Saat Tampilkan Lebih Banyak, tampilkan seluruh barang yang pernah dipinjam user
       final approval = context.watch<ApprovalProvider>();
       displayData = approval.peminjaman;
     }

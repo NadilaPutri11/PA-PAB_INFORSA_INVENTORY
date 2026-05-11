@@ -104,7 +104,6 @@ class _NotificationPageState extends State<NotificationPage> {
 
     final now = DateTime.now();
 
-    // Hari ini
     final hariIni = notifProvider.notifications.where((n) {
       if (n.createdAt == null) return false;
       return n.createdAt!.day == now.day &&
@@ -112,7 +111,6 @@ class _NotificationPageState extends State<NotificationPage> {
           n.createdAt!.year == now.year;
     }).toList();
 
-    // Kemarin
     final kemarin = notifProvider.notifications.where((n) {
       if (n.createdAt == null) return false;
       final yesterday = now.subtract(const Duration(days: 1));
@@ -121,7 +119,6 @@ class _NotificationPageState extends State<NotificationPage> {
           n.createdAt!.year == yesterday.year;
     }).toList();
 
-    // Lebih lama
     final lebihLama = notifProvider.notifications.where((n) {
       if (n.createdAt == null) return true;
       final yesterday = now.subtract(const Duration(days: 1));
@@ -251,7 +248,6 @@ class _NotificationPageState extends State<NotificationPage> {
                         ),
                       ),
 
-                    // Hari Ini
                     if (hariIni.isNotEmpty) ...[
                       _buildSectionLabel('HARI INI'),
                       const SizedBox(height: 12),
@@ -259,7 +255,6 @@ class _NotificationPageState extends State<NotificationPage> {
                       const SizedBox(height: 24),
                     ],
 
-                    // Kemarin
                     if (kemarin.isNotEmpty) ...[
                       _buildSectionLabel('KEMARIN'),
                       const SizedBox(height: 12),
@@ -267,7 +262,6 @@ class _NotificationPageState extends State<NotificationPage> {
                       const SizedBox(height: 24),
                     ],
 
-                    // Lebih Lama
                     if (lebihLama.isNotEmpty) ...[
                       _buildSectionLabel('SEBELUMNYA'),
                       const SizedBox(height: 12),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart'; 
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../providers/inventory_provider.dart';
 import '../../models/item_model.dart';
@@ -106,10 +106,6 @@ class _AddItemPageState extends State<AddItemPage> {
     }
   }
 
-<<<<<<< HEAD
-=======
-  // ── Reset Form ────────────────────────────────────────────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
   void _resetForm() {
     _formKey.currentState?.reset();
     setState(() {
@@ -196,7 +192,7 @@ class _AddItemPageState extends State<AddItemPage> {
       kodeBarang: kode,
       namaBarang: _namaBarangController.text.trim(),
       volume: vol,
-      tersedia: vol, 
+      tersedia: vol,
       satuan: _satuan,
       asalBarang: _asalBarang,
       kondisiBarang: _kondisi,
@@ -218,10 +214,7 @@ class _AddItemPageState extends State<AddItemPage> {
     if (success) {
       if (mounted) {
         _showSnackBar('Barang berhasil ditambahkan!');
-<<<<<<< HEAD
-=======
-        // Reset form setelah berhasil menambah barang
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
+
         _resetForm();
       }
     } else {
@@ -489,7 +482,7 @@ class _AddItemPageState extends State<AddItemPage> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                  ], 
+                  ], // FIX: Hanya Angka
                   validator: (v) {
                     if (v == null || v.isEmpty) {
                       return 'Tahun wajib diisi untuk barang beli';
@@ -541,7 +534,7 @@ class _AddItemPageState extends State<AddItemPage> {
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
-                        ], 
+                        ],
                         isFilled: false,
                         validator: (v) {
                           if (v == null || v.isEmpty) {
@@ -781,7 +774,7 @@ class _AddItemPageState extends State<AddItemPage> {
         maxLines: maxLines,
         enabled: enabled,
         keyboardType: keyboardType,
-        inputFormatters: inputFormatters, 
+        inputFormatters: inputFormatters,
         decoration: InputDecoration(
           hintText: hint,
           prefixText: prefixText,

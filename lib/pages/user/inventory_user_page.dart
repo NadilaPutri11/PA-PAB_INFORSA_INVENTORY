@@ -559,20 +559,23 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
                               final submitted = await Navigator.push<bool>(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => PeminjamanPage(
-                                    item: item,
-                                  ), 
+                                  builder: (context) =>
+                                      PeminjamanPage(item: item),
                                 ),
                               );
 
                               if (!context.mounted) return;
 
                               if (submitted == true) {
-                                await context.read<InventoryProvider>().fetchItems();
+                                await context
+                                    .read<InventoryProvider>()
+                                    .fetchItems();
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Permohonan peminjaman berhasil dikirim'),
+                                      content: Text(
+                                        'Permohonan peminjaman berhasil dikirim',
+                                      ),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -640,20 +643,16 @@ class _InventoryUserPageState extends State<InventoryUserPage> {
     if (rawUrl == null || rawUrl.trim().isEmpty) return null;
     final value = rawUrl.trim();
 
-<<<<<<< HEAD
-=======
-    // URL penuh langsung dipakai.
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
     if (value.startsWith('http://') || value.startsWith('https://')) {
       return value;
     }
 
-<<<<<<< HEAD
-=======
-    // Jika hanya path, bentuk ke public URL bucket foto_barang.
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
-    final normalizedPath = value.startsWith('barang/') ? value : 'barang/$value';
-    return SupabaseService.storage.from('foto_barang').getPublicUrl(normalizedPath);
+    final normalizedPath = value.startsWith('barang/')
+        ? value
+        : 'barang/$value';
+    return SupabaseService.storage
+        .from('foto_barang')
+        .getPublicUrl(normalizedPath);
   }
 
   Widget _buildAssetImage(ItemModel item) {

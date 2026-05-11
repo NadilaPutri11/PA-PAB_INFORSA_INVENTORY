@@ -230,7 +230,9 @@ class _ActivityPageState extends State<ActivityPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF1D4ED8).withValues(alpha: 0.12)),
+        border: Border.all(
+          color: const Color(0xFF1D4ED8).withValues(alpha: 0.12),
+        ),
       ),
       child: Row(
         children: [
@@ -241,7 +243,11 @@ class _ActivityPageState extends State<ActivityPage> {
               color: const Color(0xFFDBEAFE),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.schedule, color: Color(0xFF1D4ED8), size: 24),
+            child: const Icon(
+              Icons.schedule,
+              color: Color(0xFF1D4ED8),
+              size: 24,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -276,11 +282,6 @@ class _ActivityPageState extends State<ActivityPage> {
       ),
     );
   }
-<<<<<<< HEAD
-=======
-
-  // ── Card Builder Helpers (Sekarang di dalam Class State) ────────────────────
->>>>>>> 190e2f40caab643be0b09682bd87d23eac3662a1
 
   Widget _buildKonfirmasiCard(PeminjamanModel p) {
     return Container(
@@ -289,7 +290,9 @@ class _ActivityPageState extends State<ActivityPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF15803D).withValues(alpha: 0.1)),
+        border: Border.all(
+          color: const Color(0xFF15803D).withValues(alpha: 0.1),
+        ),
       ),
       child: Row(
         children: [

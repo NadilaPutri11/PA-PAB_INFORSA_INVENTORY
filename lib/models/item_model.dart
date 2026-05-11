@@ -43,7 +43,9 @@ class ItemModel {
       kodeBarang: map['kode_barang'] ?? '',
       namaBarang: map['nama_barang'] ?? '',
       volume: map['volume'] ?? 0,
-      tersedia: map['tersedia'] != null ? int.tryParse(map['tersedia'].toString()) : null,
+      tersedia: map['tersedia'] != null
+          ? int.tryParse(map['tersedia'].toString())
+          : null,
       satuan: map['satuan'] ?? '',
       asalBarang: map['asal_barang'] ?? '',
       kondisiBarang: map['kondisi_barang'] ?? 'Baik',
@@ -121,4 +123,3 @@ class ItemModel {
     );
   }
 }
-
